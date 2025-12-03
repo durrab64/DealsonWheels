@@ -1,0 +1,207 @@
+/* BuySell.css */
+
+.buy-sell-section {
+    padding: 8rem 0;
+    background-color: #000000;
+    color: #ffffff;
+    position: relative;
+    overflow: hidden;
+}
+
+.buy-sell-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+}
+
+.buy-sell-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 4rem;
+    align-items: center;
+}
+
+@media (min-width: 1024px) {
+    .buy-sell-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 6rem;
+    }
+}
+
+.buy-sell-title {
+    font-size: 3.5rem;
+    font-weight: 800;
+    line-height: 1.1;
+    margin-bottom: 1.5rem;
+    letter-spacing: -0.02em;
+}
+
+.text-gradient {
+    background: linear-gradient(to right, #ffffff, #888888);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.buy-sell-desc {
+    font-size: 1.125rem;
+    color: #888888;
+    margin-bottom: 3rem;
+    line-height: 1.6;
+    max-width: 500px;
+}
+
+.feature-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+}
+
+.feature-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 1.5rem;
+    padding: 1.5rem;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 16px;
+    transition: all 0.3s ease;
+}
+
+.feature-item:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.1);
+    transform: translateX(10px);
+}
+
+.feature-icon-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 3rem;
+    height: 3rem;
+    background: #ffffff;
+    color: #000000;
+    border-radius: 12px;
+    flex-shrink: 0;
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+    position: relative;
+    /* Ensure positioning context */
+}
+
+/* General Icon Alignment */
+.feature-icon-wrapper svg {
+    display: block;
+    margin: auto;
+}
+
+/* Specific Optical Adjustments */
+/* Car Icon - usually looks fine centered */
+.premium-item .feature-icon-wrapper,
+.premium-item .feature-text {
+    transform: translateX(15px);
+}
+
+.feature-icon-wrapper .icon-car {
+    transform: none;
+}
+
+/* Dollar Sign - Needs to be moved down and scaled slightly */
+.dollar-wrapper {
+    transform: translateX(-30px);
+}
+
+.dollar-wrapper+.feature-text {
+    transform: translateX(-60px);
+}
+
+.feature-icon-wrapper .icon-dollar {
+    transform: translate(-0.5px, 2px) scale(0.9);
+}
+
+/* Refresh Icon - usually looks fine centered */
+.feature-icon-wrapper .icon-refresh {
+    transform: none;
+}
+
+.feature-text h3 {
+    font-size: 1.125rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+    color: #ffffff;
+}
+
+.feature-text p {
+    font-size: 0.9375rem;
+    color: #888888;
+    line-height: 1.5;
+}
+
+.btn-premium {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem 2rem;
+    background: #ffffff;
+    color: #000000;
+    font-weight: 700;
+    border-radius: 9999px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-premium:hover {
+    box-shadow: 0 0 30px rgba(255, 255, 255, 0.3);
+}
+
+.buy-sell-image-wrapper {
+    position: relative;
+    border-radius: 24px;
+    overflow: hidden;
+    aspect-ratio: 4/3;
+}
+
+.buy-sell-image-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.buy-sell-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: grayscale(100%);
+    transition: all 0.5s ease;
+}
+
+.buy-sell-image-wrapper:hover .buy-sell-img {
+    filter: grayscale(0%);
+    transform: scale(1.05);
+}
+
+.image-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
+    pointer-events: none;
+}
+
+.image-glow {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at center, rgba(255, 255, 255, 0.1), transparent 70%);
+    opacity: 0;
+    transition: opacity 0.5s ease;
+    pointer-events: none;
+}
+
+.buy-sell-image-wrapper:hover .image-glow {
+    opacity: 1;
+}

@@ -1,0 +1,352 @@
+/* TradePage.css */
+.trade-page-container {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 120px 24px 48px;
+    /* Increased top padding for navbar */
+    font-family: 'Inter', sans-serif;
+    color: #ffffff;
+}
+
+/* Grid Layout */
+.trade-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 32px;
+    margin-bottom: 48px;
+}
+
+@media (min-width: 1024px) {
+    .trade-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+/* Cards */
+.trade-card {
+    border-radius: 16px;
+    padding: 32px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+.trade-card.left {
+    background-color: #0B0C10;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.trade-card.right {
+    background-color: #111029;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Section Headers */
+.section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.icon-box {
+    padding: 8px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.icon-box.blue {
+    background-color: rgba(59, 130, 246, 0.1);
+    border: 1px solid rgba(59, 130, 246, 0.2);
+    color: #60A5FA;
+}
+
+.icon-box.purple {
+    background-color: rgba(168, 85, 247, 0.1);
+    border: 1px solid rgba(168, 85, 247, 0.2);
+    color: #C084FC;
+}
+
+.section-title {
+    font-size: 20px;
+    font-weight: 700;
+    margin: 0;
+}
+
+/* Form Inputs */
+.form-group {
+    margin-bottom: 16px;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.form-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 500;
+    color: #9CA3AF;
+    margin-bottom: 6px;
+    margin-left: 4px;
+}
+
+.form-input,
+.form-select {
+    width: 100%;
+    background-color: #15161C;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 12px 16px;
+    font-size: 14px;
+    color: #ffffff;
+    transition: all 0.2s;
+    outline: none;
+}
+
+.form-input:focus,
+.form-select:focus {
+    border-color: rgba(59, 130, 246, 0.5);
+    box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.5);
+}
+
+.form-input::placeholder {
+    color: #4B5563;
+}
+
+/* Submit Button */
+.submit-btn {
+    width: 100%;
+    margin-top: 24px;
+    background: linear-gradient(to right, #4F46E5, #7C3AED);
+    color: white;
+    font-weight: 700;
+    padding: 16px;
+    border-radius: 12px;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.submit-btn:hover {
+    transform: scale(1.01);
+    box-shadow: 0 10px 15px -3px rgba(124, 58, 237, 0.3);
+}
+
+/* Right Card Specifics */
+.trading-for-header {
+    text-align: center;
+    margin-bottom: 32px;
+    position: relative;
+    z-index: 10;
+}
+
+.trading-label {
+    font-size: 12px;
+    color: #93C5FD;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 8px;
+}
+
+.car-title {
+    font-size: 30px;
+    font-weight: 700;
+    margin: 0 0 16px 0;
+}
+
+.price-badge {
+    display: inline-block;
+    padding: 8px 24px;
+    background-color: #00C853;
+    border-radius: 9999px;
+    font-size: 18px;
+    font-weight: 700;
+    box-shadow: 0 10px 15px -3px rgba(20, 83, 45, 0.3);
+}
+
+.car-image-container {
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 12px;
+    padding: 8px;
+    margin-bottom: 24px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    position: relative;
+    z-index: 10;
+}
+
+.car-image-wrapper {
+    height: 256px;
+    background-color: #111827;
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+}
+
+.car-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.9;
+}
+
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px;
+    background-color: #1E1D3D;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    margin-bottom: 12px;
+    position: relative;
+    z-index: 10;
+}
+
+.detail-label {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #D1D5DB;
+    font-weight: 500;
+}
+
+.detail-value {
+    font-weight: 700;
+}
+
+.detail-value.green {
+    color: #00C853;
+}
+
+.warning-box {
+    background-color: rgba(58, 29, 29, 0.5);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    border-radius: 12px;
+    padding: 16px;
+    position: relative;
+    z-index: 10;
+}
+
+.warning-content {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+}
+
+.warning-text {
+    font-size: 14px;
+    color: #D1D5DB;
+    line-height: 1.5;
+    margin: 0;
+}
+
+/* Features Section */
+.features-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 24px;
+    margin-top: 100px;
+    /* Explicit spacing */
+}
+
+@media (min-width: 768px) {
+    .features-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+.feature-card {
+    background-color: #0B0C10;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 16px;
+    padding: 32px;
+    text-align: center;
+    transition: border-color 0.3s;
+}
+
+.feature-card:hover {
+    border-color: rgba(59, 130, 246, 0.3);
+}
+
+.feature-icon-wrapper {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 24px;
+    transition: transform 0.3s;
+}
+
+.feature-card:hover .feature-icon-wrapper {
+    transform: scale(1.1);
+}
+
+.feature-icon-wrapper.blue {
+    background-color: rgba(59, 130, 246, 0.1);
+    border: 1px solid rgba(59, 130, 246, 0.2);
+    color: #60A5FA;
+}
+
+.feature-icon-wrapper.purple {
+    background-color: rgba(168, 85, 247, 0.1);
+    border: 1px solid rgba(168, 85, 247, 0.2);
+    color: #C084FC;
+}
+
+.feature-icon-wrapper.green {
+    background-color: rgba(34, 197, 94, 0.1);
+    border: 1px solid rgba(34, 197, 94, 0.2);
+    color: #4ADE80;
+}
+
+.feature-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.feature-desc {
+    font-size: 14px;
+    color: #9CA3AF;
+}
+
+/* Background Glows */
+.glow-purple {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 256px;
+    height: 256px;
+    background-color: rgba(147, 51, 234, 0.2);
+    filter: blur(100px);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.glow-blue {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 256px;
+    height: 256px;
+    background-color: rgba(37, 99, 235, 0.1);
+    filter: blur(100px);
+    border-radius: 50%;
+    pointer-events: none;
+}
