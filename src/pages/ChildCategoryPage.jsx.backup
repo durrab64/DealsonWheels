@@ -1,0 +1,311 @@
+import React, { useState, useMemo } from 'react';
+import { useParams, Link } from 'react-router-dom';
+import { ShoppingCart, Star, ChevronRight, Grid3x3, List } from 'lucide-react';
+import { categories } from '../data/categories.jsx';
+import { motion } from 'framer-motion';
+
+// Image mapping for specific products
+const productImages = {
+    wheels: [
+        "/images/wheels/forged_alloy_wheel_1763917069413.png",
+        "/images/wheels/chrome_racing_rim_1763917098000.png",
+        "/images/wheels/matte_black_wheel_1763917115434.png",
+        "/images/wheels/carbon_fiber_rim_1763917141644.png",
+        "/images/wheels/bronze_alloy_wheel_1763917171206.png",
+        "/images/wheels/gunmetal_racing_wheel_1763917199757.png"
+    ],
+    bumpers: [
+        "https://images.unsplash.com/photo-1583121274602-3e2820c698d9?q=80&w=800&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1617788138017-80ad40651399?q=80&w=800&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1542282088-fe8426682b8f?q=80&w=800&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1600712242805-5f78671b24da?q=80&w=800&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1553440569-bcc63803a83d?q=80&w=800&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1519641471654-76ce0107ad1b?q=80&w=800&auto=format&fit=crop"
+    ],
+    lights: [
+        "https://images.unsplash.com/photo-1583121274602-3e2820c698d9?q=80&w=800&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1503376763036-066120622c74?q=80&w=800&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1494976388531-d1058494cdd8?q=80&w=800&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1600712242805-5f78671b24da?q=80&w=800&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1553440569-bcc63803a83d?q=80&w=800&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1519641471654-76ce0107ad1b?q=80&w=800&auto=format&fit=crop"
+    ],
+    wraps: [
+        "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?q=80&w=800&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1583121274602-3e2820c698d9?q=80&w=800&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1503376763036-066120622c74?q=80&w=800&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1553440569-bcc63803a83d?q=80&w=800&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1519641471654-76ce0107ad1b?q=80&w=800&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?q=80&w=800&auto=format&fit=crop"
+    ],
+    spoilers: [
+        "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?q=80&w=800&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1583121274602-3e2820c698d9?q=80&w=800&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1503376763036-066120622c74?q=80&w=800&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1553440569-bcc63803a83d?q=80&w=800&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1519641471654-76ce0107ad1b?q=80&w=800&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?q=80&w=800&auto=format&fit=crop"
+    ],
+    default: [
+        "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?q=80&w=800&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1583121274602-3e2820c698d9?q=80&w=800&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1503376763036-066120622c74?q=80&w=800&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1553440569-bcc63803a83d?q=80&w=800&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1519641471654-76ce0107ad1b?q=80&w=800&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?q=80&w=800&auto=format&fit=crop"
+    ]
+};
+
+// Product descriptions for each category
+const productDescriptions = {
+    wheels: [
+        { name: "Forged Alloy Wheels 18\"", desc: "Lightweight forged aluminum construction with premium finish" },
+        { name: "Chrome Racing Rims 19\"", desc: "High-gloss chrome finish with aerodynamic spoke design" },
+        { name: "Matte Black Wheels 20\"", desc: "Stealthy matte black finish with reinforced hub design" },
+        { name: "Carbon Fiber Rims 19\"", desc: "Ultra-lightweight carbon fiber for maximum performance" },
+        { name: "Bronze Alloy Wheels 18\"", desc: "Unique bronze finish with concave spoke pattern" },
+        { name: "Gunmetal Racing Wheels 20\"", desc: "Aggressive gunmetal finish with deep dish design" }
+    ],
+    bumpers: [
+        { name: "Carbon Fiber Front Bumper", desc: "Lightweight carbon fiber with aggressive styling" },
+        { name: "Widebody Rear Bumper Kit", desc: "Complete widebody conversion with diffuser" },
+        { name: "Sport Front Splitter", desc: "Aerodynamic front splitter for improved downforce" },
+        { name: "GT Style Rear Diffuser", desc: "Racing-inspired rear diffuser with dual exhaust cutouts" },
+        { name: "Side Skirt Extensions", desc: "Low-profile side skirts for aggressive stance" },
+        { name: "Complete Body Kit Pro", desc: "Full body kit including front, rear, and side components" }
+    ],
+    lights: [
+        { name: "LED Headlight Kit", desc: "6000K white LED with plug-and-play installation" },
+        { name: "Halo Ring Projectors", desc: "Angel eye halo rings with HID projector beams" },
+        { name: "Smoked Taillight Set", desc: "Dark smoked lens with LED sequential turn signals" },
+        { name: "RGB Underglow Kit", desc: "App-controlled RGB underglow with multiple modes" },
+        { name: "DRL Strip Lights", desc: "Slim LED daytime running lights with amber turn signals" },
+        { name: "Fog Light Upgrade Kit", desc: "High-intensity LED fog lights with yellow lens option" }
+    ],
+    wraps: [
+        { name: "Matte Black Vinyl Wrap", desc: "Premium 3M matte black vinyl with air-release technology" },
+        { name: "Gloss Metallic Blue Wrap", desc: "Eye-catching metallic blue with high-gloss finish" },
+        { name: "Chrome Delete Kit", desc: "Satin black vinyl for all chrome trim pieces" },
+        { name: "Carbon Fiber Texture Wrap", desc: "3D carbon fiber texture with realistic weave pattern" },
+        { name: "Color Shift Wrap", desc: "Chameleon wrap that changes color with viewing angle" },
+        { name: "Ceramic Coating Package", desc: "9H hardness ceramic coating with 5-year warranty" }
+    ],
+    spoilers: [
+        { name: "GT Wing Spoiler", desc: "Adjustable GT-style wing with aluminum stands" },
+        { name: "Carbon Fiber Lip Spoiler", desc: "Subtle carbon fiber trunk lip for refined look" },
+        { name: "Ducktail Spoiler", desc: "Classic ducktail design in lightweight fiberglass" },
+        { name: "Roof Spoiler Extension", desc: "Aerodynamic roof spoiler for hatchback models" },
+        { name: "Adjustable Wing Kit", desc: "Fully adjustable wing with multiple angle settings" },
+        { name: "Rear Window Spoiler", desc: "Sleek window-mounted spoiler with 3M tape installation" }
+    ],
+    seats: [
+        { name: "Racing Bucket Seats", desc: "FIA-approved racing seats with 5-point harness compatibility" },
+        { name: "Leather Sport Seats", desc: "Premium leather with heating and lumbar support" },
+        { name: "Carbon Fiber Seats", desc: "Ultra-lightweight carbon shell with Alcantara trim" },
+        { name: "Reclining Racing Seats", desc: "Adjustable recline with side bolster support" },
+        { name: "Heated Seat Covers", desc: "Universal fit heated covers with 3-level temperature control" },
+        { name: "Seat Rail Adapters", desc: "Universal mounting rails for aftermarket seat installation" }
+    ],
+    steering: [
+        { name: "Carbon Fiber Steering Wheel", desc: "Lightweight carbon with Alcantara grip sections" },
+        { name: "Quick Release Hub", desc: "6-bolt quick release system with horn button" },
+        { name: "Leather Wrap Kit", desc: "DIY leather wrapping kit with pre-cut panels" },
+        { name: "Racing Wheel 320mm", desc: "Deep dish racing wheel with thumb grips" },
+        { name: "Paddle Shifter Kit", desc: "Aluminum paddle shifters for automatic transmissions" },
+        { name: "Steering Wheel Cover", desc: "Premium leather cover with contrast stitching" }
+    ],
+    lighting: [
+        { name: "RGB Footwell Lights", desc: "App-controlled RGB LEDs with music sync mode" },
+        { name: "Starlight Headliner", desc: "Fiber optic starlight ceiling with remote control" },
+        { name: "LED Door Sill Plates", desc: "Illuminated door sills with custom logo option" },
+        { name: "Ambient Light Strips", desc: "Flexible LED strips for dashboard and door panels" },
+        { name: "Cup Holder Lights", desc: "Color-changing cup holder inserts with 7 colors" },
+        { name: "Trunk LED Kit", desc: "Motion-activated trunk lighting system" }
+    ],
+    mats: [
+        { name: "3D Floor Mats", desc: "Custom-fit TPE mats with raised edges for spill protection" },
+        { name: "All-Weather Liners", desc: "Heavy-duty rubber liners for year-round protection" },
+        { name: "Luxury Carpet Mats", desc: "Plush carpet with embroidered logo and heel pad" },
+        { name: "Cargo Liner", desc: "Waterproof trunk liner with non-slip backing" },
+        { name: "Diamond Plate Mats", desc: "Aluminum diamond plate style for rugged look" },
+        { name: "Complete Mat Set", desc: "Front, rear, and cargo mats in matching design" }
+    ],
+    audio: [
+        { name: "12\" Subwoofer System", desc: "1200W peak power with ported enclosure" },
+        { name: "Component Speaker Set", desc: "6.5\" components with silk dome tweeters" },
+        { name: "4-Channel Amplifier", desc: "600W RMS amplifier with bass boost control" },
+        { name: "Sound Deadening Kit", desc: "50 sq ft of sound dampening material" },
+        { name: "Bluetooth Amp", desc: "Compact amplifier with wireless streaming" },
+        { name: "Complete Audio Package", desc: "Subwoofer, amp, speakers, and wiring kit" }
+    ],
+    screens: [
+        { name: "10\" Android Head Unit", desc: "Android 12 with wireless CarPlay and Android Auto" },
+        { name: "Tesla-Style Screen 12.1\"", desc: "Vertical touchscreen with 4K resolution" },
+        { name: "Rear Seat Entertainment", desc: "Dual 10\" headrest monitors with HDMI input" },
+        { name: "Digital Gauge Cluster", desc: "Customizable LCD instrument cluster display" },
+        { name: "Backup Camera System", desc: "HD camera with night vision and parking lines" },
+        { name: "360° Camera Kit", desc: "Four-camera surround view system with bird's eye view" }
+    ],
+    dashcams: [
+        { name: "4K Dash Camera", desc: "Front and rear 4K recording with night vision" },
+        { name: "GPS Tracker", desc: "Real-time GPS tracking with geofencing alerts" },
+        { name: "Parking Mode Dashcam", desc: "Motion-activated recording when parked" },
+        { name: "Mirror Dashcam", desc: "Rearview mirror with integrated front/rear cameras" },
+        { name: "Security Alarm System", desc: "2-way remote start with shock sensor" },
+        { name: "Complete Security Package", desc: "Dashcam, GPS tracker, and alarm system bundle" }
+    ],
+    tuning: [
+        { name: "ECU Tuning Chip", desc: "Plug-and-play performance chip with 30HP gain" },
+        { name: "Throttle Controller", desc: "9-mode throttle response controller" },
+        { name: "OBD2 Scanner Pro", desc: "Professional diagnostic tool with live data" },
+    const childItem = categoryData?.items.find(item => item.id === childId);
+
+    if(!childItem) {
+        return <div className="p-8 text-center text-white">Category not found</div>;
+    }
+
+    // Get specific images and descriptions for this category
+    const categoryImages = productImages[childId] || productImages.default;
+    const categoryDescs = productDescriptions[childId] || productDescriptions.wheels;
+
+    // Mock products
+    const initialProducts = useMemo(() => Array(6).fill(null).map((_, i) => ({
+        id: i,
+        name: categoryDescs[i]?.name || `${childItem.name} Pro Kit ${i + 1}`,
+        description: categoryDescs[i]?.desc || `Premium ${childItem.name.toLowerCase()} upgrade package`,
+        price: 299 + (i * 50),
+        rating: 4.5 + (i * 0.1),
+        image: categoryImages[i % categoryImages.length]
+    })), [childItem, categoryImages, categoryDescs]);
+
+    const [viewMode, setViewMode] = useState('grid');
+    const [sortOption, setSortOption] = useState('featured');
+    const [isSortOpen, setIsSortOpen] = useState(false);
+
+    // Sort items
+    const sortedProducts = useMemo(() => {
+        let sorted = [...initialProducts];
+        if (sortOption === 'name-asc') {
+            sorted.sort((a, b) => a.name.localeCompare(b.name));
+        } else if (sortOption === 'name-desc') {
+            sorted.sort((a, b) => b.name.localeCompare(a.name));
+        } else if (sortOption === 'price-asc') {
+            sorted.sort((a, b) => a.price - b.price);
+        } else if (sortOption === 'price-desc') {
+            sorted.sort((a, b) => b.price - a.price);
+        }
+        return sorted;
+    }, [initialProducts, sortOption]);
+
+    const sortOptions = [
+        { id: 'featured', label: 'Featured' },
+        { id: 'name-asc', label: 'Name (A-Z)' },
+        { id: 'name-desc', label: 'Name (Z-A)' },
+        { id: 'price-asc', label: 'Price (Low-High)' },
+        { id: 'price-desc', label: 'Price (High-Low)' }
+    ];
+
+    const container = {
+        hidden: { opacity: 0 },
+        show: {
+            opacity: 1,
+            transition: { staggerChildren: 0.1 }
+        }
+    };
+
+    const itemAnim = {
+        hidden: { opacity: 0, y: 20 },
+        show: { opacity: 1, y: 0 }
+    };
+
+    return(
+        <div className = "min-h-screen bg-black text-white pt-24 pb-12" >
+            <div className="container mx-auto px-6">
+                {/* Header Section */}
+                <div className="flex items-center gap-4 mb-8">
+                    <div className="p-3 bg-zinc-900 rounded-xl">
+                        <childItem.icon size={32} className="text-white" />
+                    </div>
+                    <div>
+                        <h1 className="text-4xl font-bold">{childItem.name}</h1>
+                        <p className="text-gray-400 mt-1">{childItem.description}</p>
+                    </div>
+                </div>
+
+                {/* Action Bar */}
+                <div className="category-actions-bar mb-8">
+                    <div className="flex items-center gap-6">
+                        <button className="action-btn">
+                            <span className="font-medium">Filter</span>
+                        </button>
+
+                        {/* Sort Dropdown */}
+                        <div className="relative">
+                            <button
+                                className="action-btn"
+                                onClick={() => setIsSortOpen(!isSortOpen)}
+                                onBlur={() => setTimeout(() => setIsSortOpen(false), 200)}
+                            >
+                                <span className="font-medium">Sort By: {sortOptions.find(o => o.id === sortOption)?.label}</span>
+                                <ChevronRight size={16} className={`transition-transform ${isSortOpen ? 'rotate-90' : ''}`} />
+                            </button>
+
+                            {isSortOpen && (
+                                <div className="sort-dropdown">
+                                    {sortOptions.map(option => (
+                                        <button
+                                            key={option.id}
+                                            className={`sort-option ${sortOption === option.id ? 'active' : ''}`}
+                                            onClick={() => {
+                                                setSortOption(option.id);
+                                                setIsSortOpen(false);
+                                            }}
+                                        >
+                                            {option.label}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="view-toggle">
+                        <button
+                            onClick={() => setViewMode('grid')}
+                            className={`view-toggle-btn ${viewMode === 'grid' ? 'active' : ''}`}
+                            aria-label="Grid view"
+                        >
+                            <Grid3x3 size={20} />
+                        </button>
+                        <button
+                            onClick={() => setViewMode('list')}
+                            className={`view-toggle-btn ${viewMode === 'list' ? 'active' : ''}`}
+                            aria-label="List view"
+                        >
+                            <List size={20} />
+                        </button>
+                    </div>
+                </div>
+
+                {/* Products Grid */}
+                <motion.div
+                    variants={container}
+                    initial="hidden"
+                    animate="show"
+                    className={viewMode === 'grid'
+                        ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
+                        : "flex flex-col gap-4"
+                    }
+                >
+                    {sortedProducts.map((product) => (
+                        <motion.div key={product.id} variants={itemAnim}>
+                            <ProductCard product={product} viewMode={viewMode} />
+                        </motion.div>
+                    ))}
+                </motion.div>
+            </div>
+        </div >
+    );
+};
+
+export default ChildCategoryPage;
