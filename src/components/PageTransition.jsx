@@ -5,7 +5,6 @@ import { gsap } from 'gsap';
 const PageTransition = ({ children }) => {
     const location = useLocation();
     const [displayChildren, setDisplayChildren] = useState(children);
-    const [isAnimating, setIsAnimating] = useState(false);
 
     const blocksRef = useRef([]);
     const containerRef = useRef(null);
@@ -44,7 +43,6 @@ const PageTransition = ({ children }) => {
             isFirstLoad.current = false;
         } else {
             // Navigation Transition Logic
-            setIsAnimating(true);
 
             // 1. Make blocks visible and ready (above screen)
             tl.set(container, { visibility: 'visible' });
@@ -84,7 +82,6 @@ const PageTransition = ({ children }) => {
 
             // 6. Cleanup
             tl.call(() => {
-                setIsAnimating(false);
                 gsap.set(container, { visibility: 'hidden' });
             });
         }
@@ -111,7 +108,7 @@ const PageTransition = ({ children }) => {
                     width: '100vw',
                     height: '100vh',
                     pointerEvents: 'none',
-                    zIndex: 9999, // Very high z-index to cover everything
+                    zIndex: 'var(--z-transition)',
                     display: 'flex',
                     visibility: 'hidden'
                 }}

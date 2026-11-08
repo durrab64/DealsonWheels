@@ -59,19 +59,21 @@ const CartPage = () => {
                                             </div>
                                             <button
                                                 onClick={() => removeFromCart(item.id)}
-                                                className="p-2 hover:bg-red-500/20 rounded-lg transition-colors group"
+                                                className="cart-item-remove hover:bg-red-500/20 transition-colors group"
+                                                aria-label={`Remove ${item.name} from cart`}
                                             >
                                                 <Trash2 size={20} className="text-white group-hover:text-red-500" />
                                             </button>
                                         </div>
 
-                                        <div className="flex justify-between items-end mt-4">
+                                        <div className="cart-item-bottom">
                                             {/* Quantity Controls */}
                                             <div className="cart-quantity-controls">
                                                 <button
                                                     onClick={() => updateQuantity(item.id, item.quantity - 1)}
                                                     className="cart-qty-btn"
                                                     disabled={item.quantity <= 1}
+                                                    aria-label={`Decrease quantity of ${item.name}`}
                                                 >
                                                     <Minus size={16} />
                                                 </button>
@@ -79,6 +81,7 @@ const CartPage = () => {
                                                 <button
                                                     onClick={() => updateQuantity(item.id, item.quantity + 1)}
                                                     className="cart-qty-btn"
+                                                    aria-label={`Increase quantity of ${item.name}`}
                                                 >
                                                     <Plus size={16} />
                                                 </button>
@@ -118,9 +121,17 @@ const CartPage = () => {
                                 </div>
                             </div>
 
-                            <button className="cart-checkout-btn">
+                            <button
+                                type="button"
+                                className="cart-checkout-btn"
+                                disabled
+                                aria-describedby="cart-page-checkout-note"
+                            >
                                 Proceed to Checkout
                             </button>
+                            <p id="cart-page-checkout-note" className="cart-checkout-note">
+                                Checkout coming soon
+                            </p>
                         </div>
                     </div>
 

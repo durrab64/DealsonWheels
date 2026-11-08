@@ -167,10 +167,10 @@ const CategoryGrid = ({ items, title, description, viewMode = 'grid', disableLin
                                 // LIST VIEW (Exact Buy & Sell Match)
                                 <Link
                                     to={`${item.id}`}
-                                    className="group bg-zinc-950 border border-white/10 rounded-lg overflow-hidden hover:border-white/20 transition-all duration-300 hover:shadow-[0_8px_30px_rgba(255,255,255,0.08)] flex flex-row w-full"
+                                    className="group bg-zinc-950 border border-white/10 rounded-lg overflow-hidden hover:border-white/20 transition-all duration-300 hover:shadow-[0_8px_30px_rgba(255,255,255,0.08)] flex flex-col sm:flex-row w-full"
                                 >
                                     {/* Image Section - Fixed Size Match */}
-                                    <div className="relative overflow-hidden bg-zinc-900 w-[420px] h-[280px] shrink-0">
+                                    <div className="relative overflow-hidden bg-zinc-900 w-full sm:w-[420px] h-[220px] sm:h-[280px] shrink-0">
                                         <img
                                             src={item.image}
                                             alt={item.name}
@@ -189,7 +189,7 @@ const CategoryGrid = ({ items, title, description, viewMode = 'grid', disableLin
 
                                     {/* Content Section - Exact Padding/Layout Match */}
                                     <div
-                                        className="p-4 flex-1 flex flex-col justify-center pr-14 py-6 gap-2"
+                                        className="category-list-content p-4 flex-1 flex flex-col justify-center pr-14 py-6 gap-2"
                                         style={{ paddingLeft: 'calc(15% - 30px)' }}
                                     >
                                         {/* Price */}
@@ -210,7 +210,7 @@ const CategoryGrid = ({ items, title, description, viewMode = 'grid', disableLin
                                         </h4>
 
                                         {/* Meta Details - Adapted for Generic Products */}
-                                        <div className="flex items-center gap-2 mb-3">
+                                        <div className="flex flex-wrap items-center gap-2 mb-3">
                                             {item.rating ? (
                                                 <>
                                                     <div className="px-3 py-1.5 bg-white/5 border border-white/10 rounded text-sm text-gray-400 font-medium flex items-center gap-1">
@@ -239,7 +239,7 @@ const CategoryGrid = ({ items, title, description, viewMode = 'grid', disableLin
 
                                         {/* View Details Button - Exact Match */}
                                         <button
-                                            className="w-full mt-2 py-3 px-4 bg-transparent text-white font-semibold rounded-lg border-2 border-white transition-all duration-300 hover:bg-white hover:text-black active:scale-[0.98]"
+                                            className="product-list-view-btn w-full mt-2 py-3 px-4 bg-transparent text-white font-semibold rounded-lg border-2 border-white transition-all duration-300 hover:bg-white hover:text-black active:scale-[0.98]"
                                             style={{
                                                 letterSpacing: '0.02em'
                                             }}

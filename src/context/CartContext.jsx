@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
 const CartContext = createContext();
 
@@ -10,11 +10,37 @@ export const useCart = () => {
     return context;
 };
 
+// Defensive validation for anything read back from localStorage.
+// The persisted shape is unchanged: an array of product objects with a
+// positive integer quantity.
+const isValidCartItem = (item) =>
+    Boolean(item) &&
+    typeof item === 'object' &&
+    (typeof item.id === 'string' || typeof item.id === 'number') &&
+    typeof item.name === 'string';
+
+const normalizeCartItems = (value) => {
+    if (!Array.isArray(value)) return [];
+
+    return value
+        .filter(isValidCartItem)
+        .map(item => ({
+            ...item,
+            quantity:
+                typeof item.quantity === 'number' &&
+                Number.isFinite(item.quantity) &&
+                item.quantity > 0
+                    ? Math.floor(item.quantity)
+                    : 1
+        }));
+};
+
 export const CartProvider = ({ children }) => {
     const [cartItems, setCartItems] = useState(() => {
         try {
             const savedCart = localStorage.getItem('cart');
-            return savedCart ? JSON.parse(savedCart) : [];
+            if (!savedCart) return [];
+            return normalizeCartItems(JSON.parse(savedCart));
         } catch (error) {
             console.error('Error reading cart from localStorage', error);
             return [];
@@ -22,6 +48,8 @@ export const CartProvider = ({ children }) => {
     });
 
     const [isCartOpen, setIsCartOpen] = useState(false);
+    // Ephemeral confirmation state for the add-to-cart toast. Not persisted.
+    const [lastAdded, setLastAdded] = useState(null);
 
     useEffect(() => {
         try {
@@ -44,7 +72,16 @@ export const CartProvider = ({ children }) => {
             return [...prevItems, { ...product, quantity: 1 }];
         });
 
+        // Show a confirmation toast. This intentionally does NOT open the drawer.
+        setLastAdded({
+            id: product.id,
+            name: product.name || 'Item',
+            image: product.image || '',
+            addedAt: Date.now()
+        });
     };
+
+    const dismissLastAdded = useCallback(() => setLastAdded(null), []);
 
     const removeFromCart = (productId) => {
         setCartItems(prevItems => prevItems.filter(item => item.id !== productId));
@@ -94,7 +131,9 @@ export const CartProvider = ({ children }) => {
             cartTotal,
             isCartOpen,
             setIsCartOpen,
-            toggleCart
+            toggleCart,
+            lastAdded,
+            dismissLastAdded
         }}>
             {children}
         </CartContext.Provider>

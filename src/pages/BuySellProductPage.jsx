@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ChevronRight, ShoppingCart, Star, Package, Truck, Shield, Check, Info, User, MapPin, Calendar, Gauge, Activity, ArrowLeftRight } from 'lucide-react';
 import { motion, useInView } from 'framer-motion';
@@ -6,7 +6,6 @@ import { tradeInventory } from '../data/cars.jsx';
 
 const BuySellProductPage = () => {
     const { id } = useParams();
-    const [product, setProduct] = useState(null);
     const [activeTab, setActiveTab] = useState('specifications');
 
     // Refs for scroll animations
@@ -19,24 +18,43 @@ const BuySellProductPage = () => {
 
     useEffect(() => {
         window.scrollTo(0, 0);
+    }, [id]);
 
-        const car = tradeInventory.find(item => item.id === parseInt(id));
+    // Resolve the car synchronously so a valid car never flashes a not-found
+    // state. The route id must match an existing inventory id exactly; values
+    // such as "1abc" or "01" are invalid.
+    const product = useMemo(() => {
+        const car = tradeInventory.find(item => String(item.id) === id);
 
-        if (car) {
-            setProduct({
-                ...car,
-                rating: 4.8,
-                reviews: car.reviewsList ? car.reviewsList.length : 0,
-                categoryTitle: "Buy & Sell",
-                childName: "Used Cars"
-            });
-        }
+        if (!car) return null;
+
+        return {
+            ...car,
+            rating: 4.8,
+            reviews: car.reviewsList ? car.reviewsList.length : 0,
+            categoryTitle: "Buy & Sell",
+            childName: "Used Cars"
+        };
     }, [id]);
 
     if (!product) {
         return (
-            <div className="min-h-screen bg-black text-white flex items-center justify-center">
-                <p>Product not found</p>
+            <div className="min-h-screen bg-black text-white flex items-center justify-center px-4">
+                <div className="text-center">
+                    <p className="text-sm font-bold uppercase tracking-[0.3em] text-gray-500 mb-4">
+                        Buy &amp; Sell
+                    </p>
+                    <h1 className="text-3xl md:text-4xl font-bold mb-4">Car not found</h1>
+                    <p className="text-gray-400 mb-8">
+                        This listing does not exist or may have been removed.
+                    </p>
+                    <Link
+                        to="/buy-sell"
+                        className="btn btn-primary inline-flex items-center justify-center"
+                    >
+                        Back to Buy &amp; Sell
+                    </Link>
+                </div>
             </div>
         );
     }
@@ -121,7 +139,7 @@ const BuySellProductPage = () => {
                                 {/* Title & Rating */}
                                 <div>
                                     <h2 className="font-bold text-white mb-4 tracking-tight" style={{ fontSize: '1.6rem', lineHeight: '1.2', fontWeight: '700' }}>{product.name}</h2>
-                                    <div className="flex items-center gap-4" style={{ fontSize: '0.96rem' }}>
+                                    <div className="flex flex-wrap items-center gap-x-4 gap-y-2" style={{ fontSize: '0.96rem' }}>
                                         <div className="flex items-center gap-2">
                                             <MapPin size={18} className="text-zinc-400" />
                                             <span className="text-zinc-300">{product.location}</span>
@@ -168,7 +186,7 @@ const BuySellProductPage = () => {
 
                                 {/* Price & Add to Cart - At Bottom */}
                                 <div style={{ marginTop: 'auto' }}>
-                                    <div className="flex items-center gap-3 mb-6">
+                                    <div className="flex flex-wrap items-center gap-3 mb-6">
                                         <div className="text-white" style={{ fontSize: '2rem', fontWeight: '800', letterSpacing: '-0.02em' }}>{product.price}</div>
                                     </div>
 

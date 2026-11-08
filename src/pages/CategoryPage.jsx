@@ -12,18 +12,14 @@ const CategoryPage = () => {
 
     const categoryData = categories[type];
 
-    if (!categoryData) {
-        return <div className="p-8 text-center">Category not found</div>;
-    }
-
     // Filter items based on search query
-    const filteredItems = categoryData.items.filter(item =>
+    const filteredItems = (categoryData?.items || []).filter(item =>
         item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.description.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
     // Get a representative image for the hero
-    const heroImage = categoryData.items[0]?.image || '';
+    const heroImage = categoryData?.items[0]?.image || '';
 
     const [viewMode, setViewMode] = React.useState('grid');
     const [sortOption, setSortOption] = React.useState('featured');
@@ -40,6 +36,11 @@ const CategoryPage = () => {
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
+
+    // All hooks run before this point so hook order stays stable across route changes.
+    if (!categoryData) {
+        return <div className="p-8 text-center">Category not found</div>;
+    }
 
     // Sort items
     const sortedItems = [...filteredItems].sort((a, b) => {

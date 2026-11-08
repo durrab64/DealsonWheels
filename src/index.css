@@ -11,6 +11,14 @@
   --font-main: 'Inter', system-ui, -apple-system, sans-serif;
   --container-width: 1280px;
   --header-height: 80px;
+  /* Overlay stacking order (lowest to highest) */
+  --z-navbar: 1000;
+  --z-drawer: 1100;
+  --z-mobile-menu: 1200;
+  --z-dropdown: 1300;
+  --z-transition: 1400;
+  --z-toast: 1500;
+  --z-modal: 1600;
 }
 
 * {
@@ -158,10 +166,35 @@ button {
 }
 
 .logo {
+  display: flex;
+  align-items: center;
+  height: var(--header-height);
+  overflow: hidden;
   font-size: 1.5rem;
   font-weight: 800;
   letter-spacing: -0.05em;
   text-transform: uppercase;
+}
+
+/* logo.png is a 500x500 canvas; the visible mark is only ~389x177.
+   Render the canvas larger and let the navbar crop the transparent padding. */
+.logo img {
+  height: 144px;
+  width: auto;
+}
+
+/* Confine the link box to the visible navbar height so its focus ring is drawn
+   inside the cropped area instead of being clipped with the canvas padding. */
+.logo a {
+  display: inline-flex;
+  align-items: center;
+  height: var(--header-height);
+}
+
+.logo a:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: -2px;
+  border-radius: 6px;
 }
 
 .search-bar {
@@ -2791,6 +2824,174 @@ button {
   transform: translateY(-2px);
 }
 
+.cart-checkout-btn:disabled,
+.cart-checkout-btn:disabled:hover {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  background: #ffffff;
+}
+
+.cart-checkout-note {
+  margin-top: 0.5rem;
+  text-align: center;
+  color: #a1a1aa;
+  font-size: 0.8rem;
+}
+
+/* Cart drawer + toast layering */
+.cart-drawer-backdrop,
+.cart-drawer-panel {
+  z-index: var(--z-drawer);
+}
+
+.cart-drawer-panel:focus {
+  outline: none;
+}
+
+/* The global `*` reset near the top of this file is unlayered, so it beats
+   Tailwind's layered spacing/max-width utilities inside the drawer. These
+   scoped rules restore the drawer's own layout without touching the reset. */
+.cart-drawer-panel {
+  max-width: 28rem;
+}
+
+.cart-drawer-header,
+.cart-drawer-body,
+.cart-drawer-footer {
+  padding: 1.5rem;
+}
+
+.cart-drawer-badge {
+  padding: 0.25rem 0.5rem;
+}
+
+.cart-drawer-close {
+  padding: 0.5rem;
+}
+
+.cart-drawer-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.cart-drawer-body > .cart-drawer-item {
+  margin-bottom: 0;
+}
+
+.cart-drawer-item {
+  padding: 1rem;
+}
+
+.cart-drawer-item-actions {
+  margin-top: 0.5rem;
+}
+
+.cart-drawer-qty-btn {
+  padding: 0.25rem;
+}
+
+.cart-drawer-remove {
+  padding: 0.5rem;
+}
+
+.cart-drawer-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.cart-drawer-total-row {
+  padding-top: 1rem;
+  margin-top: 0;
+}
+
+.cart-drawer-checkout {
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+}
+
+.cart-drawer-full-link {
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+}
+
+.cart-drawer-empty > * + * {
+  margin-top: 1rem;
+}
+
+.cart-toast-region {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: var(--z-toast);
+  display: flex;
+  justify-content: flex-end;
+  max-width: calc(100vw - 2rem);
+  pointer-events: none;
+}
+
+.cart-toast {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  max-width: 380px;
+  padding: 0.875rem 1rem;
+  background: rgba(24, 24, 27, 0.98);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.55);
+}
+
+.cart-toast-icon {
+  color: #4ade80;
+  flex-shrink: 0;
+}
+
+.cart-toast-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.cart-toast-title {
+  color: #ffffff;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.cart-toast-name {
+  color: #a1a1aa;
+  font-size: 0.8rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cart-toast-link {
+  color: #ffffff;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-decoration: underline;
+  white-space: nowrap;
+}
+
+.cart-toast-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem;
+  color: #9ca3af;
+  border-radius: 9999px;
+}
+
+.cart-toast-close:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.1);
+}
+
 /* Enhanced Category Grid Refinements */
 .category-card-enhanced {
   background: rgba(24, 24, 27, 0.6);
@@ -3096,7 +3297,7 @@ input[type=number] {
     width: 100%;
     max-width: none;
   }
-}/
+}
 
 /* ============================================
    MOBILE RESPONSIVE STYLES
@@ -3170,8 +3371,8 @@ input[type=number] {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 8px;
@@ -3341,16 +3542,16 @@ input[type=number] {
 
   /* Logo Sizing */
   .logo img {
-    height: 80px !important;
+    height: 140px !important;
   }
 
   /* Navbar */
   .navbar {
-    height: 70px;
+    height: 72px;
   }
 
   :root {
-    --header-height: 70px;
+    --header-height: 72px;
   }
 
   /* Cards */
@@ -3461,6 +3662,11 @@ input[type=number] {
     padding: 0 1.25rem;
   }
 
+  .category-slider-wrapper-home {
+    margin: 0 -1.25rem;
+    padding: 0 1.25rem;
+  }
+
   .category-section {
     padding: 4rem 0;
   }
@@ -3493,7 +3699,7 @@ input[type=number] {
   }
 
   .logo img {
-    height: 60px !important;
+    height: 120px !important;
   }
 
   .card-slider-enhanced {
@@ -3535,17 +3741,253 @@ input[type=number] {
   }
 }
 
-/* Prevent Horizontal Scroll */
+/* ============================================
+   CP4 MOBILE RESPONSIVENESS
+   Targeted fixes only. Horizontal overflow is handled at each component
+   instead of hiding it globally on body/container.
+   ============================================ */
+
+/* The mobile drawer locks page scrolling while it is open. AuthModal keeps
+   its own inline lock so the two can be open together safely. */
+body.mobile-menu-open {
+  overflow: hidden;
+}
+
+.cart-item-remove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: 0.5rem;
+  flex-shrink: 0;
+}
+
+.cart-item-bottom {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
 @media (max-width: 1024px) {
-  body {
-    overflow-x: hidden;
+  .mobile-menu {
+    width: min(92vw, 400px);
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 
-  * {
+  .mobile-menu-content {
+    padding: 1.25rem;
+    gap: 1.5rem;
+  }
+
+  .mobile-menu-close,
+  .mobile-menu-btn,
+  .view-toggle-btn,
+  .sort-option,
+  .mobile-nav-item,
+  .mobile-dropdown-item {
+    min-height: 44px;
+  }
+
+  .mobile-menu-close,
+  .mobile-menu-btn,
+  .view-toggle-btn {
+    min-width: 44px;
+  }
+
+  .mobile-search .search-results-dropdown {
+    max-height: min(320px, 45vh);
+  }
+
+  .location-badge {
+    flex-wrap: wrap;
+    justify-content: center;
     max-width: 100%;
+    line-height: 1.4;
+    row-gap: 0.35rem;
   }
 
-  .container {
-    overflow-x: hidden;
+  .location-badge-wrapper {
+    padding-top: 1rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .product-tabs-nav {
+    gap: 1rem;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+
+  .product-tab-btn {
+    flex: 0 0 auto;
+    font-size: 1rem;
+    padding: 0.875rem 0;
+  }
+
+  .cart-item-remove {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    min-height: 44px;
+    border-radius: 0.5rem;
+    flex-shrink: 0;
+  }
+
+  .cart-qty-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .cart-calculation,
+  .cart-summary-card {
+    position: static;
+  }
+
+  .cart-drawer-close,
+  .cart-drawer-remove,
+  .cart-toast-close {
+    min-width: 44px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .cart-drawer-qty-btn {
+    min-width: 44px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .search-input {
+    min-height: 44px;
+  }
+
+  .buy-sell-view-btn,
+  .car-favorite-btn,
+  .product-list-view-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .buy-sell-sort-btn,
+  .buy-sell-price-input {
+    min-height: 44px;
+  }
+
+  .action-btn {
+    min-height: 44px;
+  }
+}
+
+@media (max-width: 768px) {
+  .product-horizontal-image {
+    height: 220px;
+    min-height: 220px;
+  }
+
+  .cart-page-container {
+    padding-top: 6.5rem;
+    padding-bottom: 3rem;
+  }
+
+  .cart-title {
+    font-size: 2rem;
+  }
+
+  .cart-header {
+    margin-bottom: 2rem;
+  }
+
+  .cart-empty-state {
+    padding: 2rem 1rem;
+  }
+
+  .cart-summary-card {
+    padding: 1.25rem;
+  }
+
+  .cart-item-card {
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1rem;
+  }
+
+  .cart-item-image-wrapper {
+    width: 100%;
+    height: 180px;
+  }
+
+  .cart-item-header {
+    gap: 0.75rem;
+  }
+
+  .cart-item-name {
+    font-size: 1.1rem;
+  }
+
+  .cart-item-desc {
+    font-size: 0.8125rem;
+  }
+
+  .cart-item-price {
+    font-size: 1.1rem;
+  }
+
+  .cart-item-bottom {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+
+  .mobile-menu .logo img {
+    height: 96px !important;
+  }
+
+  .review-action-btn {
+    min-width: 44px;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .cart-header > a {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+  }
+}
+
+@media (max-width: 639px) {
+  .category-list-content,
+  .buy-sell-list-content {
+    padding: 1.25rem !important;
+  }
+
+  .category-list-content .product-view-details-btn {
+    width: 100%;
+  }
+
+  .cart-item-image-wrapper {
+    height: 160px;
   }
 }
