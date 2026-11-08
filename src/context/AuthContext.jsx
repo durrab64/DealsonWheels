@@ -10,11 +10,21 @@ export const useAuth = () => {
     return context;
 };
 
+// Only accept a persisted user that has the fields the UI relies on.
+const isValidUser = (value) =>
+    Boolean(value) &&
+    typeof value === 'object' &&
+    (typeof value.id === 'string' || typeof value.id === 'number') &&
+    typeof value.name === 'string' &&
+    typeof value.email === 'string';
+
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(() => {
         try {
             const savedUser = localStorage.getItem('user');
-            return savedUser ? JSON.parse(savedUser) : null;
+            if (!savedUser) return null;
+            const parsedUser = JSON.parse(savedUser);
+            return isValidUser(parsedUser) ? parsedUser : null;
         } catch (error) {
             return null;
         }
@@ -24,7 +34,7 @@ export const AuthProvider = ({ children }) => {
     const [authMode, setAuthMode] = useState('login'); // 'login' or 'signup'
 
     useEffect(() => {
-        if (user) {
+        if (isValidUser(user)) {
             localStorage.setItem('user', JSON.stringify(user));
         } else {
             localStorage.removeItem('user');

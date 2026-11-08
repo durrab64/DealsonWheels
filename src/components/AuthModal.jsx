@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { X, Mail, Lock, User, ArrowRight, Github } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
+import useDialogA11y from '../hooks/useDialogA11y';
 import './AuthModal.css';
 
 const AuthModal = () => {
@@ -21,9 +22,22 @@ const AuthModal = () => {
     });
 
     const [isLoading, setIsLoading] = useState(false);
+    const [errorMessage, setErrorMessage] = useState('');
+
+    const emailInputRef = useRef(null);
+
+    const handleClose = () => {
+        setErrorMessage('');
+        closeAuthModal();
+    };
+
+    const dialogRef = useDialogA11y(isAuthModalOpen, handleClose, {
+        initialFocusRef: emailInputRef
+    });
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setErrorMessage('');
         setIsLoading(true);
         try {
             if (authMode === 'login') {
@@ -33,6 +47,7 @@ const AuthModal = () => {
             }
         } catch (error) {
             console.error('Auth error:', error);
+            setErrorMessage(error?.message || 'Something went wrong. Please try again.');
         } finally {
             setIsLoading(false);
         }
@@ -40,6 +55,11 @@ const AuthModal = () => {
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
+
+    const handleSwitchMode = () => {
+        setErrorMessage('');
+        setAuthMode(authMode === 'login' ? 'signup' : 'login');
     };
 
     return (
@@ -51,30 +71,39 @@ const AuthModal = () => {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        onClick={closeAuthModal}
+                        onClick={(e) => {
+                            if (e.target === e.currentTarget) handleClose();
+                        }}
                         className="auth-backdrop"
                     >
                         {/* Modal */}
                         <motion.div
+                            ref={dialogRef}
+                            role="dialog"
+                            aria-modal="true"
+                            aria-labelledby="auth-modal-title"
+                            aria-describedby="auth-modal-subtitle"
+                            tabIndex={-1}
                             initial={{ opacity: 0, scale: 0.95, y: 20 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                            onClick={(e) => e.stopPropagation()}
                             className="auth-modal"
                         >
                             <button
-                                onClick={closeAuthModal}
+                                type="button"
+                                onClick={handleClose}
                                 className="auth-close-btn"
+                                aria-label="Close authentication dialog"
                             >
-                                <X size={20} />
+                                <X size={20} aria-hidden="true" />
                             </button>
 
                             <div className="auth-content">
                                 <div className="auth-header">
-                                    <h2 className="auth-title">
+                                    <h2 id="auth-modal-title" className="auth-title">
                                         {authMode === 'login' ? 'Welcome Back' : 'Create Account'}
                                     </h2>
-                                    <p className="auth-subtitle">
+                                    <p id="auth-modal-subtitle" className="auth-subtitle">
                                         {authMode === 'login'
                                             ? 'Enter your credentials to access your account'
                                             : 'Join us to get the best deals on car parts'}
@@ -84,16 +113,18 @@ const AuthModal = () => {
                                 <form onSubmit={handleSubmit} className="auth-form">
                                     {authMode === 'signup' && (
                                         <div className="auth-field">
-                                            <label className="auth-label">Full Name</label>
+                                            <label className="auth-label" htmlFor="auth-name">Full Name</label>
                                             <div className="auth-input-wrapper">
-                                                <User className="auth-icon" size={18} />
+                                                <User className="auth-icon" size={18} aria-hidden="true" />
                                                 <input
+                                                    id="auth-name"
                                                     type="text"
                                                     name="name"
                                                     value={formData.name}
                                                     onChange={handleChange}
                                                     placeholder="John Doe"
                                                     className="auth-input"
+                                                    autoComplete="name"
                                                     required
                                                 />
                                             </div>
@@ -101,36 +132,47 @@ const AuthModal = () => {
                                     )}
 
                                     <div className="auth-field">
-                                        <label className="auth-label">Email Address</label>
+                                        <label className="auth-label" htmlFor="auth-email">Email Address</label>
                                         <div className="auth-input-wrapper">
-                                            <Mail className="auth-icon" size={18} />
+                                            <Mail className="auth-icon" size={18} aria-hidden="true" />
                                             <input
+                                                ref={emailInputRef}
+                                                id="auth-email"
                                                 type="email"
                                                 name="email"
                                                 value={formData.email}
                                                 onChange={handleChange}
                                                 placeholder="john@example.com"
                                                 className="auth-input"
+                                                autoComplete="email"
                                                 required
                                             />
                                         </div>
                                     </div>
 
                                     <div className="auth-field">
-                                        <label className="auth-label">Password</label>
+                                        <label className="auth-label" htmlFor="auth-password">Password</label>
                                         <div className="auth-input-wrapper">
-                                            <Lock className="auth-icon" size={18} />
+                                            <Lock className="auth-icon" size={18} aria-hidden="true" />
                                             <input
+                                                id="auth-password"
                                                 type="password"
                                                 name="password"
                                                 value={formData.password}
                                                 onChange={handleChange}
                                                 placeholder="••••••••"
                                                 className="auth-input"
+                                                autoComplete={authMode === 'login' ? 'current-password' : 'new-password'}
                                                 required
                                             />
                                         </div>
                                     </div>
+
+                                    {errorMessage && (
+                                        <p className="auth-error" role="alert">
+                                            {errorMessage}
+                                        </p>
+                                    )}
 
                                     <button
                                         type="submit"
@@ -138,11 +180,11 @@ const AuthModal = () => {
                                         className="auth-submit-btn"
                                     >
                                         {isLoading ? (
-                                            <div className="spinner" />
+                                            <div className="spinner" aria-label="Signing in" />
                                         ) : (
                                             <>
                                                 {authMode === 'login' ? 'Sign In' : 'Create Account'}
-                                                <ArrowRight size={18} />
+                                                <ArrowRight size={18} aria-hidden="true" />
                                             </>
                                         )}
                                     </button>
@@ -154,16 +196,23 @@ const AuthModal = () => {
                                     <div className="divider-line" />
                                 </div>
 
-                                <button className="auth-github-btn">
-                                    <Github size={20} />
-                                    Continue with GitHub
+                                <button
+                                    type="button"
+                                    className="auth-github-btn"
+                                    disabled
+                                    aria-describedby="auth-github-note"
+                                >
+                                    <Github size={20} aria-hidden="true" />
+                                    <span>Continue with GitHub</span>
+                                    <span id="auth-github-note" className="auth-coming-soon">Coming soon</span>
                                 </button>
 
                                 <div className="auth-footer">
                                     <p className="auth-footer-text">
                                         {authMode === 'login' ? "Don't have an account? " : "Already have an account? "}
                                         <button
-                                            onClick={() => setAuthMode(authMode === 'login' ? 'signup' : 'login')}
+                                            type="button"
+                                            onClick={handleSwitchMode}
                                             className="auth-switch-btn"
                                         >
                                             {authMode === 'login' ? 'Sign up' : 'Log in'}

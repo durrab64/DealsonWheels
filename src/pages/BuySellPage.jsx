@@ -88,22 +88,22 @@ const BuySellPage = () => {
                         <div className="category-actions-bar">
                             <div className="flex flex-wrap items-center justify-between gap-4 w-full max-w-6xl mx-auto">
                                 {/* Left Side: Price Range & Sort */}
-                                <div className="flex items-center gap-4 md:gap-6">
+                                <div className="flex flex-wrap items-center gap-3 sm:gap-4 md:gap-6 w-full lg:w-auto">
                                     {/* Premium Price Range Inputs */}
-                                    <div className="group flex items-center gap-3 bg-zinc-900/90 backdrop-blur-md p-1.5 rounded-xl border border-white/10 hover:border-white/20 transition-all duration-300 shadow-lg shadow-black/20">
+                                    <div className="group flex flex-wrap items-center gap-2 sm:gap-3 bg-zinc-900/90 backdrop-blur-md p-1.5 rounded-xl border border-white/10 hover:border-white/20 transition-all duration-300 shadow-lg shadow-black/20">
                                         <div className="flex items-center gap-2 px-2">
                                             <Search size={14} className="text-gray-400" />
                                             <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">Price Range</span>
                                         </div>
                                         <div className="h-6 w-px bg-white/10"></div>
-                                        <div className="flex items-center gap-2">
+                                        <div className="flex items-center gap-1 sm:gap-2">
                                             <div className="relative">
                                                 <input
                                                     type="number"
                                                     placeholder="Min"
                                                     value={minPrice}
                                                     onChange={(e) => setMinPrice(e.target.value)}
-                                                    className="w-20 bg-transparent px-2 py-1 text-sm text-white placeholder-gray-600 focus:outline-none text-center font-medium"
+                                                    className="buy-sell-price-input w-14 sm:w-20 bg-transparent px-2 py-1 text-sm text-white placeholder-gray-600 focus:outline-none text-center font-medium"
                                                 />
                                                 <span className="absolute right-0 top-1/2 -translate-y-1/2 text-[10px] text-gray-600 pointer-events-none">Rs</span>
                                             </div>
@@ -114,7 +114,7 @@ const BuySellPage = () => {
                                                     placeholder="Max"
                                                     value={maxPrice}
                                                     onChange={(e) => setMaxPrice(e.target.value)}
-                                                    className="w-20 bg-transparent px-2 py-1 text-sm text-white placeholder-gray-600 focus:outline-none text-center font-medium"
+                                                    className="buy-sell-price-input w-14 sm:w-20 bg-transparent px-2 py-1 text-sm text-white placeholder-gray-600 focus:outline-none text-center font-medium"
                                                 />
                                                 <span className="absolute right-0 top-1/2 -translate-y-1/2 text-[10px] text-gray-600 pointer-events-none">Rs</span>
                                             </div>
@@ -124,10 +124,10 @@ const BuySellPage = () => {
                                     <div className="h-8 w-px bg-white/10 hidden md:block"></div>
 
                                     {/* Custom Animated Sort Dropdown */}
-                                    <div className="relative" ref={sortRef}>
+                                    <div className="relative w-full sm:w-auto" ref={sortRef}>
                                         <button
                                             onClick={() => setIsSortOpen(!isSortOpen)}
-                                            className={`flex items-center gap-3 px-5 py-2.5 rounded-xl border transition-all duration-300 ${isSortOpen
+                                            className={`buy-sell-sort-btn flex items-center justify-between gap-3 w-full sm:w-auto px-5 py-2.5 rounded-xl border transition-all duration-300 ${isSortOpen
                                                 ? 'bg-white/5 border-white/30 text-white shadow-[0_0_20px_rgba(255,255,255,0.15)]'
                                                 : 'bg-zinc-900/90 border-white/10 text-gray-300 hover:bg-white/5 hover:border-white/25 hover:text-white hover:shadow-[0_0_15px_rgba(255,255,255,0.08)]'
                                                 }`}
@@ -148,7 +148,7 @@ const BuySellPage = () => {
                                                     animate={{ opacity: 1, y: 0 }}
                                                     exit={{ opacity: 0, y: -10 }}
                                                     transition={{ duration: 0.2, ease: "easeOut" }}
-                                                    className="absolute top-full left-0 mt-2 w-64 bg-zinc-900/98 backdrop-blur-xl border border-white/15 rounded-xl shadow-[0_12px_40px_rgba(0,0,0,0.8)] overflow-hidden z-[9999]"
+                                                    className="absolute top-full left-0 mt-2 w-full sm:w-64 bg-zinc-900/98 backdrop-blur-xl border border-white/15 rounded-xl shadow-[0_12px_40px_rgba(0,0,0,0.8)] overflow-hidden z-[9999]"
                                                 >
                                                     <div className="p-2">
                                                         {sortOptions.map((option) => (
@@ -186,7 +186,7 @@ const BuySellPage = () => {
                                 <div className="flex items-center gap-2 bg-zinc-900/90 backdrop-blur-md p-2 rounded-xl border border-white/10 shadow-lg shadow-black/20">
                                     <button
                                         onClick={() => setViewMode('grid')}
-                                        className={`p-3.5 rounded-lg transition-all duration-300 ${viewMode === 'grid'
+                                        className={`buy-sell-view-btn p-3.5 rounded-lg transition-all duration-300 ${viewMode === 'grid'
                                             ? 'bg-white/15 text-white shadow-sm'
                                             : 'text-gray-400 hover:bg-white/8 hover:text-white'
                                             }`}
@@ -196,7 +196,7 @@ const BuySellPage = () => {
                                     </button>
                                     <button
                                         onClick={() => setViewMode('list')}
-                                        className={`p-3.5 rounded-lg transition-all duration-300 ${viewMode === 'list'
+                                        className={`buy-sell-view-btn p-3.5 rounded-lg transition-all duration-300 ${viewMode === 'list'
                                             ? 'bg-white/15 text-white shadow-sm'
                                             : 'text-gray-400 hover:bg-white/8 hover:text-white'
                                             }`}
@@ -235,12 +235,12 @@ const BuySellPage = () => {
                                         initial={{ opacity: 0, y: 20 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         transition={{ delay: index * 0.05 }}
-                                        className={`group bg-zinc-950 border border-white/10 rounded-lg overflow-hidden hover:border-white/20 transition-all duration-300 hover:shadow-[0_8px_30px_rgba(255,255,255,0.08)] ${viewMode === 'list' ? 'flex flex-row' : ''
+                                        className={`group bg-zinc-950 border border-white/10 rounded-lg overflow-hidden hover:border-white/20 transition-all duration-300 hover:shadow-[0_8px_30px_rgba(255,255,255,0.08)] ${viewMode === 'list' ? 'flex flex-col sm:flex-row' : ''
                                             }`}
                                     >
-                                        <Link to={`/category/cars/used/${car.id}`} className={viewMode === 'list' ? 'flex flex-row w-full' : ''}>
+                                        <Link to={`/category/cars/used/${car.id}`} className={viewMode === 'list' ? 'flex flex-col sm:flex-row w-full' : ''}>
                                             {/* Image Section */}
-                                            <div className={`relative overflow-hidden bg-zinc-900 ${viewMode === 'list' ? 'w-[420px] h-[280px] shrink-0' : 'aspect-[4/3] '
+                                            <div className={`relative overflow-hidden bg-zinc-900 ${viewMode === 'list' ? 'w-full sm:w-[420px] h-[220px] sm:h-[280px] shrink-0' : 'aspect-[4/3] '
                                                 }`}>
                                                 <img
                                                     src={car.image}
@@ -250,8 +250,8 @@ const BuySellPage = () => {
 
                                                 {/* Badge */}
                                                 {car.badge && (
-                                                    <div className="absolute top-3 left-3 p-7">
-                                                        <span className="px-9 py-4   text-sm font-bold rounded shadow-lg">
+                                                    <div className="absolute top-3 left-3">
+                                                        <span className="px-3 py-1 text-sm font-bold rounded shadow-lg">
                                                             {car.badge}
                                                         </span>
                                                     </div>
@@ -263,7 +263,8 @@ const BuySellPage = () => {
                                                         e.preventDefault();
                                                         e.stopPropagation();
                                                     }}
-                                                    className="absolute top-3 right-3 p-2 bg-black/50 backdrop-blur-sm rounded-full text-white hover:bg-black/70 transition-colors"
+                                                    className="car-favorite-btn absolute top-3 right-3 p-2 bg-black/50 backdrop-blur-sm rounded-full text-white hover:bg-black/70 transition-colors"
+                                                    aria-label={`Save ${car.name} to favourites`}
                                                 >
                                                     <Heart size={18} />
                                                 </button>
@@ -271,7 +272,7 @@ const BuySellPage = () => {
 
                                             {/* Content Section */}
                                             <div
-                                                className={`p-5 flex-1 flex flex-col ${viewMode === 'list' ? 'justify-center pr-14 py-6 gap-2' : ''}`}
+                                                className={`buy-sell-list-content p-5 flex-1 flex flex-col ${viewMode === 'list' ? 'justify-center pr-14 py-6 gap-2' : ''}`}
                                                 style={viewMode === 'list' ? { paddingLeft: 'calc(15% - 30px)' } : {padding:"20px"}}
                                             >
                                                 {/* Price */}
@@ -281,7 +282,7 @@ const BuySellPage = () => {
                                                 <h4 className={`${viewMode === 'list' ? 'text-xl' : 'text-lg '} font-normal text-gray-300 mb-3 line-clamp-1`}>{car.name}</h4>
 
                                                 {/* Meta Details - Condition & Year */}
-                                                <div className="flex items-center gap-2 mb-3">
+                                                <div className="flex flex-wrap items-center gap-2 mb-3">
                                                     <span className="px-3 py-1.5 bg-white/5 border border-white/10 rounded text-sm text-gray-400 font-medium">
                                                         {car.condition}
                                                     </span>
@@ -292,7 +293,7 @@ const BuySellPage = () => {
                                                 </div>
 
                                                 {/* Mileage & Location */}
-                                                <div className="flex items-center gap-3 text-base text-gray-500 mb-1">
+                                                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-base text-gray-500 mb-1">
                                                     <span>{car.mileage}</span>
                                                     <span>•</span>
                                                     <span className="flex items-center gap-1">
@@ -308,7 +309,7 @@ const BuySellPage = () => {
 
                                                 {/* View Details Button */}
                                                 <button
-                                                    className="w-full mt-4 py-3 px-4 bg-transparent text-white font-medium rounded-xl border border-white/30 transition-all duration-300 hover:bg-white/10 hover:text-white hover:border-white hover:shadow-[0_0_20px_rgba(255,255,255,0.1)] active:scale-[0.98] uppercase tracking-wider text-sm"
+                                                    className="product-list-view-btn w-full mt-4 py-3 px-4 bg-transparent text-white font-medium rounded-xl border border-white/30 transition-all duration-300 hover:bg-white/10 hover:text-white hover:border-white hover:shadow-[0_0_20px_rgba(255,255,255,0.1)] active:scale-[0.98] uppercase tracking-wider text-sm"
                                                 >
                                                     View Details
                                                 </button>

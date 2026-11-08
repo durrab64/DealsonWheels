@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Car, User, ArrowRight, Calendar, Gauge, CheckCircle, Star, ChevronDown } from 'lucide-react';
-import PageTransition from '../components/PageTransition';
 import './TradePage.css';
 
 export default function TradePage() {
@@ -22,7 +21,7 @@ export default function TradePage() {
     };
 
     return (
-        <PageTransition>
+        <>
             <div className="trade-page-container">
                 <div className="trade-grid">
                     {/* Left Column - Your Vehicle Form */}
@@ -242,6 +241,6 @@ export default function TradePage() {
                     </div>
                 </div>
             </div>
-        </PageTransition>
+        </>
     );
 }
