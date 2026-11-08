@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { authProvider } from '../data/compose';
 
 const AuthContext = createContext();
 
@@ -10,21 +11,11 @@ export const useAuth = () => {
     return context;
 };
 
-// Only accept a persisted user that has the fields the UI relies on.
-const isValidUser = (value) =>
-    Boolean(value) &&
-    typeof value === 'object' &&
-    (typeof value.id === 'string' || typeof value.id === 'number') &&
-    typeof value.name === 'string' &&
-    typeof value.email === 'string';
-
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(() => {
         try {
             const savedUser = localStorage.getItem('user');
-            if (!savedUser) return null;
-            const parsedUser = JSON.parse(savedUser);
-            return isValidUser(parsedUser) ? parsedUser : null;
+            return savedUser ? JSON.parse(savedUser) : null;
         } catch (error) {
             return null;
         }
@@ -32,51 +23,51 @@ export const AuthProvider = ({ children }) => {
 
     const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
     const [authMode, setAuthMode] = useState('login'); // 'login' or 'signup'
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        if (isValidUser(user)) {
-            localStorage.setItem('user', JSON.stringify(user));
-        } else {
-            localStorage.removeItem('user');
-        }
-    }, [user]);
+        const unsubscribe = authProvider.onAuthStateChange((userData) => {
+            setUser(userData);
+            if (userData) {
+                localStorage.setItem('user', JSON.stringify(userData));
+            } else {
+                localStorage.removeItem('user');
+            }
+            setLoading(false);
+        });
+
+        return () => {
+            if (typeof unsubscribe === 'function') {
+                unsubscribe();
+            }
+        };
+    }, []);
 
     const login = async (email, password) => {
-        // Mock login
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                const mockUser = {
-                    id: '1',
-                    name: 'Demo User',
-                    email: email,
-                    avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100'
-                };
-                setUser(mockUser);
-                setIsAuthModalOpen(false);
-                resolve(mockUser);
-            }, 1000);
-        });
+        const loggedUser = await authProvider.login(email, password);
+        setUser(loggedUser);
+        setIsAuthModalOpen(false);
+        return loggedUser;
     };
 
     const signup = async (name, email, password) => {
-        // Mock signup
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                const mockUser = {
-                    id: '1',
-                    name: name,
-                    email: email,
-                    avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100'
-                };
-                setUser(mockUser);
-                setIsAuthModalOpen(false);
-                resolve(mockUser);
-            }, 1000);
-        });
+        const newUser = await authProvider.signup(name, email, password);
+        setUser(newUser);
+        setIsAuthModalOpen(false);
+        return newUser;
     };
 
-    const logout = () => {
+    const loginGuest = async () => {
+        const guestUser = await authProvider.loginAnonymously();
+        setUser(guestUser);
+        setIsAuthModalOpen(false);
+        return guestUser;
+    };
+
+    const logout = async () => {
+        await authProvider.logout();
         setUser(null);
+        localStorage.removeItem('user');
     };
 
     const openLogin = () => {
@@ -96,8 +87,10 @@ export const AuthProvider = ({ children }) => {
     return (
         <AuthContext.Provider value={{
             user,
+            loading,
             login,
             signup,
+            loginGuest,
             logout,
             isAuthModalOpen,
             authMode,

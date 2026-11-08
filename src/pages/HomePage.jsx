@@ -2,12 +2,13 @@ import React from 'react';
 import Hero from '../components/Hero';
 import CategorySection from '../components/CategorySection';
 import BuySell from '../components/BuySell';
+import PageTransition from '../components/PageTransition';
 
 import { categories } from '../data/categories.jsx';
 
 const HomePage = () => {
     return (
-        <>
+        <PageTransition>
             <Hero />
             <div id="exterior">
                 <CategorySection
@@ -34,7 +35,7 @@ const HomePage = () => {
                 />
             </div>
             <BuySell />
-        </>
+        </PageTransition>
     );
 };
 

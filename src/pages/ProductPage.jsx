@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ChevronRight, ShoppingCart, Star, Package, Truck, Shield, Check, Info, User } from 'lucide-react';
 import { motion, useInView } from 'framer-motion';
@@ -8,6 +8,7 @@ import { useCart } from '../context/CartContext';
 const ProductPage = () => {
     const { type, childId, productId } = useParams();
     const { addToCart, setIsCartOpen } = useCart();
+    const [product, setProduct] = useState(null);
     const [activeTab, setActiveTab] = useState('specifications');
 
     // Refs for scroll animations
@@ -20,47 +21,41 @@ const ProductPage = () => {
 
     useEffect(() => {
         window.scrollTo(0, 0);
-    }, [type, childId, productId]);
 
-    // Resolve the product synchronously so a valid page never flashes a
-    // not-found state while an effect runs. Parts product IDs are intentionally
-    // not validated; the existing placeholder content is shown for any productId
-    // under a real child category.
-    const product = useMemo(() => {
         const categoryData = categories[type];
-        const childItem = categoryData?.items?.find(item => item.id === childId);
+        const childItem = categoryData?.items.find(item => item.id === childId);
 
-        if (!childItem) return null;
-
-        return {
-            id: productId,
-            name: childItem.name,
-            description: childItem.description,
-            price: '$399.00',
-            rating: 4.5,
-            reviews: 128,
-            image: childItem.image,
-            categoryTitle: categoryData.title,
-            childName: childItem.name,
-            specifications: {
-                'Material': 'Premium Carbon Fiber',
-                'Compatibility': 'Universal Fit',
-                'Finish': 'Matte Black',
-                'Installation': 'Plug & Play',
-                'Warranty': '1 Year Manufacturer',
-                'Origin': 'Made in USA'
-            },
-            features: [
-                'High-quality construction for durability',
-                'Easy installation with included hardware',
-                'Sleek design that complements any vehicle',
-                'Weather-resistant materials',
-                'Professional-grade performance',
-                'Backed by manufacturer warranty'
-            ],
-            inStock: true,
-            stockCount: 12
-        };
+        if (childItem) {
+            setProduct({
+                id: productId,
+                name: childItem.name,
+                description: childItem.description,
+                price: '$399.00',
+                rating: 4.5,
+                reviews: 128,
+                image: childItem.image,
+                categoryTitle: categoryData.title,
+                childName: childItem.name,
+                specifications: {
+                    'Material': 'Premium Carbon Fiber',
+                    'Compatibility': 'Universal Fit',
+                    'Finish': 'Matte Black',
+                    'Installation': 'Plug & Play',
+                    'Warranty': '1 Year Manufacturer',
+                    'Origin': 'Made in USA'
+                },
+                features: [
+                    'High-quality construction for durability',
+                    'Easy installation with included hardware',
+                    'Sleek design that complements any vehicle',
+                    'Weather-resistant materials',
+                    'Professional-grade performance',
+                    'Backed by manufacturer warranty'
+                ],
+                inStock: true,
+                stockCount: 12
+            });
+        }
     }, [type, childId, productId]);
 
     if (!product) {
@@ -154,7 +149,7 @@ const ProductPage = () => {
                                 {/* Title & Rating */}
                                 <div>
                                     <h2 className="font-bold text-white mb-4 tracking-tight" style={{ fontSize: '1.6rem', lineHeight: '1.2', fontWeight: '700' }}>{product.name}</h2>
-                                    <div className="flex flex-wrap items-center gap-x-4 gap-y-2" style={{ fontSize: '0.96rem' }}>
+                                    <div className="flex items-center gap-4" style={{ fontSize: '0.96rem' }}>
                                         <div className="flex items-center gap-2">
                                             <Star size={19} className="text-yellow-400 fill-yellow-400" />
                                             <span className="text-white font-bold">{product.rating}</span>
@@ -200,7 +195,7 @@ const ProductPage = () => {
 
                                 {/* Price & Add to Cart - At Bottom */}
                                 <div style={{ marginTop: 'auto' }}>
-                                    <div className="flex flex-wrap items-center gap-3 mb-6">
+                                    <div className="flex items-center gap-3 mb-6">
                                         <div className="text-white" style={{ fontSize: '2rem', fontWeight: '800', letterSpacing: '-0.02em' }}>{product.price}</div>
                                         <div className="flex flex-col items-start justify-end" style={{ paddingBottom: '0.8rem' }}>
                                             <span

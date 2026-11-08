@@ -1,5 +1,4 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 
 const Hero = () => {
@@ -31,13 +30,13 @@ const Hero = () => {
                 </p>
 
                 <div className="hero-actions">
-                    <Link to="/category/exterior" className="btn btn-primary">
+                    <button className="btn btn-primary">
                         <span>Explore Upgrades</span>
                         <ArrowRight size={20} />
-                    </Link>
-                    <Link to="/sell-car" className="btn btn-outline">
+                    </button>
+                    <button className="btn btn-outline">
                         Sell Your Car
-                    </Link>
+                    </button>
                 </div>
             </div>
         </div>

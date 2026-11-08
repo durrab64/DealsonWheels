@@ -1,4 +1,6 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { cartProvider } from '../data/compose';
+import { useAuth } from './AuthContext';
 
 const CartContext = createContext();
 
@@ -10,112 +12,91 @@ export const useCart = () => {
     return context;
 };
 
-// Defensive validation for anything read back from localStorage.
-// The persisted shape is unchanged: an array of product objects with a
-// positive integer quantity.
-const isValidCartItem = (item) =>
-    Boolean(item) &&
-    typeof item === 'object' &&
-    (typeof item.id === 'string' || typeof item.id === 'number') &&
-    typeof item.name === 'string';
-
-const normalizeCartItems = (value) => {
-    if (!Array.isArray(value)) return [];
-
-    return value
-        .filter(isValidCartItem)
-        .map(item => ({
-            ...item,
-            quantity:
-                typeof item.quantity === 'number' &&
-                Number.isFinite(item.quantity) &&
-                item.quantity > 0
-                    ? Math.floor(item.quantity)
-                    : 1
-        }));
-};
-
 export const CartProvider = ({ children }) => {
-    const [cartItems, setCartItems] = useState(() => {
-        try {
-            const savedCart = localStorage.getItem('cart');
-            if (!savedCart) return [];
-            return normalizeCartItems(JSON.parse(savedCart));
-        } catch (error) {
-            console.error('Error reading cart from localStorage', error);
-            return [];
-        }
-    });
-
+    const { user } = useAuth();
+    const [cartItems, setCartItems] = useState([]);
     const [isCartOpen, setIsCartOpen] = useState(false);
-    // Ephemeral confirmation state for the add-to-cart toast. Not persisted.
-    const [lastAdded, setLastAdded] = useState(null);
 
+    // Subscribe to cart changes for user or local cart
     useEffect(() => {
-        try {
-            localStorage.setItem('cart', JSON.stringify(cartItems));
-        } catch (error) {
-            console.error('Error saving cart to localStorage', error);
-        }
-    }, [cartItems]);
+        let isMounted = true;
+        const userId = user?.uid || user?.id || null;
+
+        const unsubscribe = cartProvider.subscribeToCart(userId, (items) => {
+            if (isMounted && Array.isArray(items)) {
+                setCartItems(items);
+            }
+        });
+
+        return () => {
+            isMounted = false;
+            if (typeof unsubscribe === 'function') {
+                unsubscribe();
+            }
+        };
+    }, [user?.uid, user?.id]);
 
     const addToCart = (product) => {
+        const userId = user?.uid || user?.id || null;
         setCartItems(prevItems => {
             const existingItem = prevItems.find(item => item.id === product.id);
+            let updated;
             if (existingItem) {
-                return prevItems.map(item =>
+                updated = prevItems.map(item =>
                     item.id === product.id
                         ? { ...item, quantity: item.quantity + 1 }
                         : item
                 );
+            } else {
+                updated = [...prevItems, { ...product, quantity: 1 }];
             }
-            return [...prevItems, { ...product, quantity: 1 }];
-        });
-
-        // Show a confirmation toast. This intentionally does NOT open the drawer.
-        setLastAdded({
-            id: product.id,
-            name: product.name || 'Item',
-            image: product.image || '',
-            addedAt: Date.now()
+            cartProvider.saveCart(userId, updated);
+            return updated;
         });
     };
 
-    const dismissLastAdded = useCallback(() => setLastAdded(null), []);
-
     const removeFromCart = (productId) => {
-        setCartItems(prevItems => prevItems.filter(item => item.id !== productId));
+        const userId = user?.uid || user?.id || null;
+        setCartItems(prevItems => {
+            const updated = prevItems.filter(item => item.id !== productId);
+            cartProvider.saveCart(userId, updated);
+            return updated;
+        });
     };
 
     const updateQuantity = (productId, quantity) => {
+        const userId = user?.uid || user?.id || null;
         if (quantity < 1) {
             removeFromCart(productId);
             return;
         }
-        setCartItems(prevItems =>
-            prevItems.map(item =>
+        setCartItems(prevItems => {
+            const updated = prevItems.map(item =>
                 item.id === productId
                     ? { ...item, quantity }
                     : item
-            )
-        );
+            );
+            cartProvider.saveCart(userId, updated);
+            return updated;
+        });
     };
 
     const clearCart = () => {
+        const userId = user?.uid || user?.id || null;
         setCartItems([]);
+        cartProvider.clearCart(userId);
     };
 
-    const cartCount = cartItems.reduce((total, item) => total + item.quantity, 0);
+    const cartCount = cartItems.reduce((total, item) => total + (item.quantity || 0), 0);
 
-    // Assuming price is a string like "$1,200" or number. We need to parse it.
     const getPriceValue = (priceStr) => {
         if (typeof priceStr === 'number') return priceStr;
         if (!priceStr) return 0;
-        return parseFloat(priceStr.replace(/[^0-9.]/g, ''));
+        return parseFloat(String(priceStr).replace(/[^0-9.]/g, '')) || 0;
     };
 
     const cartTotal = cartItems.reduce((total, item) => {
-        return total + (getPriceValue(item.price) * item.quantity);
+        return total + (getPriceValue(item.price) * (item.quantity || 1));
     }, 0);
 
     const toggleCart = () => setIsCartOpen(!isCartOpen);
@@ -131,9 +112,7 @@ export const CartProvider = ({ children }) => {
             cartTotal,
             isCartOpen,
             setIsCartOpen,
-            toggleCart,
-            lastAdded,
-            dismissLastAdded
+            toggleCart
         }}>
             {children}
         </CartContext.Provider>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Search, ChevronDown, ShoppingBag, User, LogOut, Menu, X } from 'lucide-react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -17,105 +17,9 @@ const Navbar = () => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const searchRef = useRef(null);
-  const mobileMenuButtonRef = useRef(null);
-  const mobileMenuCloseRef = useRef(null);
-  const mobileMenuRef = useRef(null);
 
-  const { cartCount, isCartOpen, toggleCart } = useCart();
-  const { user, openLogin, logout, isAuthModalOpen } = useAuth();
-
-  const closeMobileMenu = useCallback(() => {
-    setIsMobileMenuOpen(false);
-    window.setTimeout(() => mobileMenuButtonRef.current?.focus?.(), 0);
-  }, []);
-
-  // Lock background scrolling while the mobile drawer is open. A body class is
-  // used instead of inline styles so the auth modal's own scroll lock keeps
-  // working when it is opened from inside the mobile menu.
-  useEffect(() => {
-    if (!isMobileMenuOpen) return undefined;
-
-    document.body.classList.add('mobile-menu-open');
-    return () => document.body.classList.remove('mobile-menu-open');
-  }, [isMobileMenuOpen]);
-
-  // Move focus into the drawer when it opens.
-  useEffect(() => {
-    if (!isMobileMenuOpen) return;
-    mobileMenuCloseRef.current?.focus?.();
-  }, [isMobileMenuOpen]);
-
-  // Escape closes the drawer, but not while the auth modal is layered above it
-  // (the auth modal handles its own Escape and focus restoration).
-  useEffect(() => {
-    if (!isMobileMenuOpen || isAuthModalOpen) return undefined;
-
-    const handleKeyDown = (event) => {
-      if (event.key === 'Escape') {
-        event.preventDefault();
-        closeMobileMenu();
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isMobileMenuOpen, isAuthModalOpen, closeMobileMenu]);
-
-  // Contain keyboard focus inside the drawer while it is open. The auth modal
-  // is rendered outside the drawer and owns its own focus trap, so this trap
-  // stands down while the auth modal is layered above the drawer.
-  useEffect(() => {
-    if (!isMobileMenuOpen || isAuthModalOpen) return undefined;
-
-    const container = mobileMenuRef.current;
-    if (!container) return undefined;
-
-    const getFocusable = () => Array.from(
-      container.querySelectorAll(
-        'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
-      )
-    ).filter((element) => element.getClientRects().length > 0);
-
-    const handleKeyDown = (event) => {
-      if (event.key !== 'Tab') return;
-
-      const focusable = getFocusable();
-      if (focusable.length === 0) {
-        event.preventDefault();
-        container.focus?.();
-        return;
-      }
-
-      const first = focusable[0];
-      const last = focusable[focusable.length - 1];
-      const active = document.activeElement;
-      const isInside = container.contains(active);
-
-      if (event.shiftKey && (active === first || !isInside)) {
-        event.preventDefault();
-        last.focus();
-      } else if (!event.shiftKey && (active === last || !isInside)) {
-        event.preventDefault();
-        first.focus();
-      }
-    };
-
-    // Pull focus back into the drawer if anything moves it outside, so
-    // background content cannot receive keyboard focus while the menu is open.
-    const handleFocusIn = (event) => {
-      if (!container.contains(event.target)) {
-        const focusable = getFocusable();
-        (focusable[0] || container).focus?.();
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown, true);
-    document.addEventListener('focusin', handleFocusIn, true);
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown, true);
-      document.removeEventListener('focusin', handleFocusIn, true);
-    };
-  }, [isMobileMenuOpen, isAuthModalOpen]);
+  const { cartCount, toggleCart } = useCart();
+  const { user, openLogin, logout } = useAuth();
 
   const handleSearch = (e) => {
     const value = e.target.value;
@@ -210,7 +114,7 @@ const Navbar = () => {
         <div className="container nav-content">
           <div className="logo">
             <Link to="/" className="block transition-all duration-700 ease-out hover:scale-110">
-              <img src="/logo.png" alt="DEALS ON WHEELS" className="w-auto" />
+              <img src="/logo.png" alt="DEALS ON WHEELS" className="h-36 w-auto md:h-36 h-24" />
             </Link>
           </div>
 
@@ -336,33 +240,25 @@ const Navbar = () => {
             </div>
 
             {/* Cart Button */}
-            <button
-              type="button"
-              onClick={toggleCart}
+            <Link
+              to="/cart"
               className="btn btn-primary relative"
-              aria-label="Open cart"
-              aria-haspopup="dialog"
-              aria-expanded={isCartOpen}
-              aria-controls="cart-drawer"
             >
               <span>Cart</span>
-              <ShoppingBag size={16} aria-hidden="true" />
+              <ShoppingBag size={16} />
               {cartCount > 0 && (
                 <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold flex items-center justify-center rounded-full border-2 border-black">
                   {cartCount}
                 </span>
               )}
-            </button>
+            </Link>
           </div>
 
           {/* Mobile Menu Button */}
           <button
-            ref={mobileMenuButtonRef}
             className="mobile-menu-btn"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
-            aria-expanded={isMobileMenuOpen}
-            aria-controls="mobile-menu"
+            aria-label="Toggle menu"
           >
             {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
@@ -378,31 +274,24 @@ const Navbar = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               className="mobile-menu-overlay"
-              onClick={closeMobileMenu}
+              onClick={() => setIsMobileMenuOpen(false)}
             />
             <motion.div
               initial={{ x: '100%' }}
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'tween', duration: 0.3 }}
-              ref={mobileMenuRef}
               className="mobile-menu"
-              id="mobile-menu"
-              role="dialog"
-              aria-modal="true"
-              aria-label="Mobile navigation"
             >
               <div className="mobile-menu-header">
                 <div className="logo">
-                  <Link to="/" onClick={closeMobileMenu}>
-                    <img src="/logo.png" alt="DEALS ON WHEELS" className="w-auto" />
+                  <Link to="/" onClick={() => setIsMobileMenuOpen(false)}>
+                    <img src="/logo.png" alt="DEALS ON WHEELS" className="h-20 w-auto" />
                   </Link>
                 </div>
                 <button
-                  ref={mobileMenuCloseRef}
-                  onClick={closeMobileMenu}
+                  onClick={() => setIsMobileMenuOpen(false)}
                   className="mobile-menu-close"
-                  aria-label="Close menu"
                 >
                   <X size={24} />
                 </button>
@@ -419,15 +308,6 @@ const Navbar = () => {
                     onChange={handleSearch}
                   />
                   <Search className="search-icon" />
-                  <SearchResults
-                    results={searchResults}
-                    isOpen={isSearchOpen}
-                    onClose={() => {
-                      setIsSearchOpen(false);
-                      closeMobileMenu();
-                    }}
-                    searchQuery={searchValue}
-                  />
                 </div>
 
                 {/* Mobile Nav Links */}
@@ -435,14 +315,14 @@ const Navbar = () => {
                   <Link
                     to="/"
                     className="mobile-nav-item"
-                    onClick={closeMobileMenu}
+                    onClick={() => setIsMobileMenuOpen(false)}
                   >
                     Home
                   </Link>
                   <Link
                     to="/buy-sell"
                     className="mobile-nav-item"
-                    onClick={closeMobileMenu}
+                    onClick={() => setIsMobileMenuOpen(false)}
                   >
                     Buy & Sell
                   </Link>
@@ -473,7 +353,7 @@ const Navbar = () => {
                                 key={item.id}
                                 to={`${category.path}/${item.id}`}
                                 className="mobile-dropdown-item"
-                                onClick={closeMobileMenu}
+                                onClick={() => setIsMobileMenuOpen(false)}
                               >
                                 {item.name}
                               </Link>
@@ -499,7 +379,7 @@ const Navbar = () => {
                       <button
                         onClick={() => {
                           logout();
-                          closeMobileMenu();
+                          setIsMobileMenuOpen(false);
                         }}
                         className="w-full text-left px-4 py-3 text-red-400 hover:bg-white/5 flex items-center gap-2 transition-colors rounded-lg"
                       >
@@ -509,7 +389,10 @@ const Navbar = () => {
                     </div>
                   ) : (
                     <button
-                      onClick={openLogin}
+                      onClick={() => {
+                        openLogin();
+                        setIsMobileMenuOpen(false);
+                      }}
                       className="w-full btn btn-outline flex items-center justify-center gap-2"
                     >
                       <User size={20} />
@@ -520,7 +403,7 @@ const Navbar = () => {
                   <Link
                     to="/cart"
                     className="btn btn-primary w-full mt-3 relative"
-                    onClick={closeMobileMenu}
+                    onClick={() => setIsMobileMenuOpen(false)}
                   >
                     <span>Cart</span>
                     <ShoppingBag size={20} />

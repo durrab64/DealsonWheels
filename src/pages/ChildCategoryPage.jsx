@@ -204,49 +204,50 @@ const productDescriptions = {
     ],
 };
 
-const productData = [
-    { originalPrice: 399.99, discount: 25, rating: 4.8, reviewCount: 234 },
-    { originalPrice: 599.99, discount: 15, rating: 4.5, reviewCount: 189 },
-    { originalPrice: 299.99, discount: 30, rating: 4.9, reviewCount: 312 },
-    { originalPrice: 799.99, discount: 20, rating: 4.6, reviewCount: 156 },
-    { originalPrice: 449.99, discount: 10, rating: 4.7, reviewCount: 278 },
-    { originalPrice: 649.99, discount: 18, rating: 4.4, reviewCount: 201 }
-];
-
 const ChildCategoryPage = () => {
     const { type, childId } = useParams();
     const categoryData = categories[type];
     const childItem = categoryData?.items.find(item => item.id === childId);
 
+    if (!childItem) {
+        return <div className="p-8 text-center text-white">Category not found</div>;
+    }
+
+    // Get specific images and descriptions for this category
+    const categoryImages = productImages[childId] || [];
+    const categoryDescs = productDescriptions[childId] || [];
+
     const { addToCart } = useCart();
 
-    // Mock products - convert to items format like CategoryGrid expects.
-    // Images and descriptions for this category are resolved inside the memo.
-    const productItems = useMemo(() => {
-        if (!childItem) return [];
+    // Predefined prices, discounts, and reviews for variety
+    const productData = [
+        { originalPrice: 399.99, discount: 25, rating: 4.8, reviewCount: 234 },
+        { originalPrice: 599.99, discount: 15, rating: 4.5, reviewCount: 189 },
+        { originalPrice: 299.99, discount: 30, rating: 4.9, reviewCount: 312 },
+        { originalPrice: 799.99, discount: 20, rating: 4.6, reviewCount: 156 },
+        { originalPrice: 449.99, discount: 10, rating: 4.7, reviewCount: 278 },
+        { originalPrice: 649.99, discount: 18, rating: 4.4, reviewCount: 201 }
+    ];
 
-        const categoryImages = productImages[childId] || [];
-        const categoryDescs = productDescriptions[childId] || [];
-        const itemCount = categoryImages.length > 0 ? categoryImages.length : 6;
+    // Mock products - convert to items format like CategoryGrid expects
+    const itemCount = categoryImages.length > 0 ? categoryImages.length : 6;
+    const productItems = useMemo(() => Array(itemCount).fill(null).map((_, i) => {
+        const data = productData[i % productData.length];
+        const discountedPrice = data.originalPrice * (1 - data.discount / 100);
 
-        return Array(itemCount).fill(null).map((_, i) => {
-            const data = productData[i % productData.length];
-            const discountedPrice = data.originalPrice * (1 - data.discount / 100);
-
-            return {
-                id: `${childId}-product-${i}`,
-                name: categoryDescs[i]?.name || `${childItem.name} Pro Kit ${i + 1}`,
-                description: categoryDescs[i]?.desc || `Premium ${childItem.name.toLowerCase()} upgrade package`,
-                image: categoryImages[i % categoryImages.length] || childItem.image,
-                icon: childItem.icon,
-                originalPrice: `Rs${data.originalPrice.toFixed(2)}`,
-                price: `Rs${discountedPrice.toFixed(2)}`,
-                discount: data.discount,
-                rating: data.rating,
-                reviewCount: data.reviewCount
-            };
-        });
-    }, [childItem, childId]);
+        return {
+            id: `${childId}-product-${i}`,
+            name: categoryDescs[i]?.name || `${childItem.name} Pro Kit ${i + 1}`,
+            description: categoryDescs[i]?.desc || `Premium ${childItem.name.toLowerCase()} upgrade package`,
+            image: categoryImages[i % categoryImages.length] || childItem.image,
+            icon: childItem.icon,
+            originalPrice: `Rs${data.originalPrice.toFixed(2)}`,
+            price: `Rs${discountedPrice.toFixed(2)}`,
+            discount: data.discount,
+            rating: data.rating,
+            reviewCount: data.reviewCount
+        };
+    }), [childItem, categoryImages, categoryDescs, childId, itemCount]);
 
     const [viewMode, setViewMode] = useState('grid');
     const [sortOption, setSortOption] = useState('featured');
@@ -262,11 +263,6 @@ const ChildCategoryPage = () => {
         }
         return sorted;
     }, [productItems, sortOption]);
-
-    // All hooks run before this point so hook order stays stable across route changes.
-    if (!childItem) {
-        return <div className="p-8 text-center text-white">Category not found</div>;
-    }
 
     const sortOptions = [
         { id: 'featured', label: 'Featured' },
