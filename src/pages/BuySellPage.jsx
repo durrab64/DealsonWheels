@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { List, Grid3x3, ChevronDown, MapPin, Heart, Check, Search } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-import { tradeInventory } from '../data/cars.jsx';
+import { getVehicleListings } from '../data/vehicleRepository';
 
 const BuySellPage = () => {
     const [viewMode, setViewMode] = useState('grid');
@@ -38,7 +38,7 @@ const BuySellPage = () => {
     };
 
     const filteredAndSortedInventory = React.useMemo(() => {
-        let result = [...tradeInventory];
+        let result = [...getVehicleListings()];
 
         // Filter by Price Range
         if (minPrice || maxPrice) {
@@ -59,7 +59,7 @@ const BuySellPage = () => {
         // Add other sort logic if needed (e.g., newest)
 
         return result;
-    }, [tradeInventory, sortBy, minPrice, maxPrice]);
+    }, [sortBy, minPrice, maxPrice]);
 
     return (
         <div className="min-h-screen bg-black text-white">

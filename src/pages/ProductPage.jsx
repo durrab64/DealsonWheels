@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ChevronRight, ShoppingCart, Star, Package, Truck, Shield, Check, Info, User } from 'lucide-react';
 import { motion, useInView } from 'framer-motion';
-import { categories } from '../data/categories.jsx';
+import { getProductDetail } from '../data/catalogRepository';
 import { useCart } from '../context/CartContext';
 
 const ProductPage = () => {
@@ -26,42 +26,10 @@ const ProductPage = () => {
     // not-found state while an effect runs. Parts product IDs are intentionally
     // not validated; the existing placeholder content is shown for any productId
     // under a real child category.
-    const product = useMemo(() => {
-        const categoryData = categories[type];
-        const childItem = categoryData?.items?.find(item => item.id === childId);
-
-        if (!childItem) return null;
-
-        return {
-            id: productId,
-            name: childItem.name,
-            description: childItem.description,
-            price: '$399.00',
-            rating: 4.5,
-            reviews: 128,
-            image: childItem.image,
-            categoryTitle: categoryData.title,
-            childName: childItem.name,
-            specifications: {
-                'Material': 'Premium Carbon Fiber',
-                'Compatibility': 'Universal Fit',
-                'Finish': 'Matte Black',
-                'Installation': 'Plug & Play',
-                'Warranty': '1 Year Manufacturer',
-                'Origin': 'Made in USA'
-            },
-            features: [
-                'High-quality construction for durability',
-                'Easy installation with included hardware',
-                'Sleek design that complements any vehicle',
-                'Weather-resistant materials',
-                'Professional-grade performance',
-                'Backed by manufacturer warranty'
-            ],
-            inStock: true,
-            stockCount: 12
-        };
-    }, [type, childId, productId]);
+    const product = useMemo(
+        () => getProductDetail(type, childId, productId),
+        [type, childId, productId]
+    );
 
     if (!product) {
         return (

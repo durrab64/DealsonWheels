@@ -3,14 +3,14 @@ import { useParams, useSearchParams, Link } from 'react-router-dom';
 import { ChevronRight, Grid3x3, List, ChevronDown, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import CategoryGrid from '../components/CategoryGrid';
-import { categories } from '../data/categories.jsx';
+import { getCategory } from '../data/catalogRepository';
 
 const CategoryPage = () => {
     const { type } = useParams();
     const [searchParams] = useSearchParams();
     const searchQuery = searchParams.get('q') || '';
 
-    const categoryData = categories[type];
+    const categoryData = getCategory(type);
 
     // Filter items based on search query
     const filteredItems = (categoryData?.items || []).filter(item =>

@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { loadUser, saveUser, clearUser } from '../data/authStorage';
 
 const AuthContext = createContext();
 
@@ -10,35 +11,15 @@ export const useAuth = () => {
     return context;
 };
 
-// Only accept a persisted user that has the fields the UI relies on.
-const isValidUser = (value) =>
-    Boolean(value) &&
-    typeof value === 'object' &&
-    (typeof value.id === 'string' || typeof value.id === 'number') &&
-    typeof value.name === 'string' &&
-    typeof value.email === 'string';
-
 export const AuthProvider = ({ children }) => {
-    const [user, setUser] = useState(() => {
-        try {
-            const savedUser = localStorage.getItem('user');
-            if (!savedUser) return null;
-            const parsedUser = JSON.parse(savedUser);
-            return isValidUser(parsedUser) ? parsedUser : null;
-        } catch (error) {
-            return null;
-        }
-    });
+    // Persistence (validation, parsing, serialization) lives in the adapter.
+    const [user, setUser] = useState(loadUser);
 
     const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
     const [authMode, setAuthMode] = useState('login'); // 'login' or 'signup'
 
     useEffect(() => {
-        if (isValidUser(user)) {
-            localStorage.setItem('user', JSON.stringify(user));
-        } else {
-            localStorage.removeItem('user');
-        }
+        saveUser(user);
     }, [user]);
 
     const login = async (email, password) => {
@@ -77,6 +58,7 @@ export const AuthProvider = ({ children }) => {
 
     const logout = () => {
         setUser(null);
+        clearUser();
     };
 
     const openLogin = () => {

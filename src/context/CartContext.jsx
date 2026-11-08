@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { loadCartItems, saveCartItems } from '../data/cartStorage';
 
 const CartContext = createContext();
 
@@ -10,53 +11,16 @@ export const useCart = () => {
     return context;
 };
 
-// Defensive validation for anything read back from localStorage.
-// The persisted shape is unchanged: an array of product objects with a
-// positive integer quantity.
-const isValidCartItem = (item) =>
-    Boolean(item) &&
-    typeof item === 'object' &&
-    (typeof item.id === 'string' || typeof item.id === 'number') &&
-    typeof item.name === 'string';
-
-const normalizeCartItems = (value) => {
-    if (!Array.isArray(value)) return [];
-
-    return value
-        .filter(isValidCartItem)
-        .map(item => ({
-            ...item,
-            quantity:
-                typeof item.quantity === 'number' &&
-                Number.isFinite(item.quantity) &&
-                item.quantity > 0
-                    ? Math.floor(item.quantity)
-                    : 1
-        }));
-};
-
 export const CartProvider = ({ children }) => {
-    const [cartItems, setCartItems] = useState(() => {
-        try {
-            const savedCart = localStorage.getItem('cart');
-            if (!savedCart) return [];
-            return normalizeCartItems(JSON.parse(savedCart));
-        } catch (error) {
-            console.error('Error reading cart from localStorage', error);
-            return [];
-        }
-    });
+    // Persistence (validation, parsing, serialization) lives in the adapter.
+    const [cartItems, setCartItems] = useState(loadCartItems);
 
     const [isCartOpen, setIsCartOpen] = useState(false);
     // Ephemeral confirmation state for the add-to-cart toast. Not persisted.
     const [lastAdded, setLastAdded] = useState(null);
 
     useEffect(() => {
-        try {
-            localStorage.setItem('cart', JSON.stringify(cartItems));
-        } catch (error) {
-            console.error('Error saving cart to localStorage', error);
-        }
+        saveCartItems(cartItems);
     }, [cartItems]);
 
     const addToCart = (product) => {

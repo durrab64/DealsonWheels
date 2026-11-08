@@ -4,7 +4,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
-import { categories } from '../data/categories.jsx';
+import { getCategoryEntries } from '../data/catalogRepository';
 import SearchResults from './SearchResults';
 
 const Navbar = () => {
@@ -136,8 +136,7 @@ const Navbar = () => {
     const results = [];
     const lowerQuery = query.toLowerCase();
 
-    Object.keys(categories).forEach((categoryType) => {
-      const category = categories[categoryType];
+    getCategoryEntries().forEach(([categoryType, category]) => {
       category.items.forEach((item) => {
         if (
           item.name.toLowerCase().includes(lowerQuery) ||

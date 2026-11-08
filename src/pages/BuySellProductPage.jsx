@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ChevronRight, ShoppingCart, Star, Package, Truck, Shield, Check, Info, User, MapPin, Calendar, Gauge, Activity, ArrowLeftRight } from 'lucide-react';
 import { motion, useInView } from 'framer-motion';
-import { tradeInventory } from '../data/cars.jsx';
+import { getVehicleById } from '../data/vehicleRepository';
 
 const BuySellProductPage = () => {
     const { id } = useParams();
@@ -24,7 +24,7 @@ const BuySellProductPage = () => {
     // state. The route id must match an existing inventory id exactly; values
     // such as "1abc" or "01" are invalid.
     const product = useMemo(() => {
-        const car = tradeInventory.find(item => String(item.id) === id);
+        const car = getVehicleById(id);
 
         if (!car) return null;
 
