@@ -129,15 +129,16 @@ partial CP3-only commit.
 | Item | Value |
 |---|---|
 | Branch | `phase1/foundation` |
-| Commit | `afcd1595cee760e93fc96c216d82c9dbad0fa5ea` |
+| Code commit | `afcd1595cee760e93fc96c216d82c9dbad0fa5ea` |
 | Parent | `46d854eb42f04881e5f7c5bb33d0f15dc9379654` |
-| Commit message | `feat(cp3): secure guest-cart handoff with UID-bound recovery` |
-| Push | `46d854e..afcd159 phase1/foundation -> phase1/foundation` |
-| Remote HEAD | `afcd1595cee760e93fc96c216d82c9dbad0fa5ea` (matches local) |
+| Code commit message | `feat(cp3): secure guest-cart handoff with UID-bound recovery` |
+| Release report commit | Docs-only follow-up commit on the same branch |
+| Push | `46d854e..afcd159` then `afcd159..<docs commit>`, non-force |
+| Remote HEAD | Verified equal to local HEAD after each push via `git ls-remote` |
 | Force push | **No** |
 | History rewrite | **No** |
 | `main` modified | **No** — local `main` remains `60a7038`, `origin/main` remains `0d0dba6` |
-| Working tree after commit | **Clean** |
+| Working tree after push | **Clean** |
 | `.env.local` | Ignored by `.gitignore:28` (`\.env\.\*`); not staged or committed |
 | Secrets found in changed files | **None** (no Admin SDK, service account or private key material) |
 
