@@ -1,3 +1,4 @@
+import React from 'react'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
@@ -43,14 +44,14 @@ describe('PageTransition query-string navigation', () => {
       </MemoryRouter>
     )
 
-    expect(screen.getByTestId('current-search')).toHaveTextContent('initial')
-    expect(screen.getByTestId('transitioned-search')).toHaveTextContent('initial')
+    expect(screen.getByTestId('current-search').textContent).toBe('initial')
+    expect(screen.getByTestId('transitioned-search').textContent).toBe('initial')
 
     await user.click(screen.getByRole('button', { name: 'Change query' }))
 
     await waitFor(() =>
-      expect(screen.getByTestId('current-search')).toHaveTextContent('updated')
+      expect(screen.getByTestId('current-search').textContent).toBe('updated')
     )
-    expect(screen.getByTestId('transitioned-search')).toHaveTextContent('initial')
+    expect(screen.getByTestId('transitioned-search').textContent).toBe('initial')
   })
 })

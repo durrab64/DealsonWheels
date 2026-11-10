@@ -1,3 +1,19 @@
+vi.mock('firebase/auth', () => ({
+  getAuth: vi.fn(() => ({})),
+  signInAnonymously: vi.fn(),
+  createUserWithEmailAndPassword: vi.fn(),
+  signInWithEmailAndPassword: vi.fn(),
+  signOut: vi.fn(() => Promise.resolve()),
+  linkWithCredential: vi.fn(),
+  EmailAuthProvider: { credential: vi.fn() },
+  onAuthStateChanged: vi.fn(),
+  sendPasswordResetEmail: vi.fn(() => Promise.resolve()),
+}));
+
+vi.mock('firebase/app', () => ({
+  initializeApp: vi.fn(() => ({})),
+}));
+
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { AUTH_STORAGE_KEY, clearUser, loadUser, saveUser } from './authStorage'
 
@@ -23,7 +39,7 @@ describe('authStorage', () => {
   })
 
   it('accepts a numeric id and extra fields', () => {
-    const numeric = { id: 0, name: 'Numeric User', email: 'n@example.com', avatar: '/a.png' }
+    const numeric = { id: 0, name: 'Numeric User', email: 'n@example.com', avatar: '/avatar.png' }
     localStorage.setItem('user', JSON.stringify(numeric))
 
     expect(loadUser()).toEqual(numeric)
@@ -34,12 +50,15 @@ describe('authStorage', () => {
     ['a non-object value', '"just a string"'],
     ['null', 'null'],
     ['an array', '[]'],
-    ['an object missing the email', JSON.stringify({ id: '1', name: 'No Email' })],
+    [
+      'an object missing the email',
+      JSON.stringify({ id: '1', name: 'No Email' }),
+    ],
     [
       'an object with a non-string name',
       JSON.stringify({ id: '1', name: 42, email: 'demo@example.com' }),
     ],
-  ])('returns null for %s', (_label, storedValue) => {
+  ])('rejects %s and removes the stored value', (_label, storedValue) => {
     localStorage.setItem('user', storedValue)
 
     expect(loadUser()).toBeNull()

@@ -4,6 +4,7 @@ import { X, Minus, Plus, Trash2, ShoppingBag } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '../context/CartContext';
 import useDialogA11y from '../hooks/useDialogA11y';
+import GuestCartRecovery from './GuestCartRecovery';
 
 const CartDrawer = () => {
     const {
@@ -84,6 +85,7 @@ const CartDrawer = () => {
                                     >
                                         Continue Shopping
                                     </button>
+                                    <GuestCartRecovery className="pt-2" />
                                 </div>
                             ) : (
                                 cartItems.map((item) => (

@@ -1,15 +1,16 @@
 import { defineConfig } from 'vitest/config'
-import react from '@vitejs/plugin-react'
 
-// Test-only configuration. Production builds continue to use vite.config.js.
 export default defineConfig({
-  plugins: [react()],
   test: {
     environment: 'jsdom',
-    setupFiles: ['./src/test/setup.js'],
-    include: ['src/**/*.{test,spec}.{js,jsx}'],
-    css: false,
-    restoreMocks: true,
-    clearMocks: true,
+    env: {
+      VITE_FIREBASE_API_KEY: 'test-api-key',
+      VITE_FIREBASE_AUTH_DOMAIN: 'test.firebaseapp.com',
+      VITE_FIREBASE_PROJECT_ID: 'test-project',
+      VITE_FIREBASE_STORAGE_BUCKET: 'test.appspot.com',
+      VITE_FIREBASE_MESSAGING_SENDER_ID: '123456789',
+      VITE_FIREBASE_APP_ID: '1:123456789:web:test',
+      VITE_FIREBASE_MEASUREMENT_ID: 'G-TEST',
+    },
   },
 })

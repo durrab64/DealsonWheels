@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Trash2, Plus, Minus, ShoppingBag, ArrowLeft, Box } from 'lucide-react';
 import { useCart } from '../context/CartContext';
+import GuestCartRecovery from '../components/GuestCartRecovery';
 
 const CartPage = () => {
     const { cartItems, updateQuantity, removeFromCart, cartTotal } = useCart();
@@ -34,6 +35,7 @@ const CartPage = () => {
                                 <ShoppingBag size={64} className="mx-auto text-zinc-700 mb-4" />
                                 <h2 className="text-2xl font-semibold text-white mb-2">Your cart is empty</h2>
                                 <p className="text-gray-400 mb-6">Add some items to get started!</p>
+                                <GuestCartRecovery className="mb-6" />
                                 <Link to="/" className="inline-block bg-white text-black font-bold py-3 px-8 rounded-lg hover:bg-gray-100 transition-colors">
                                     Start Shopping
                                 </Link>

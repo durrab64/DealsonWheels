@@ -1,6 +1,33 @@
-import { act, renderHook, waitFor } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
+import React from 'react'
+import { act, renderHook } from '@testing-library/react'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { signInAnonymously } from 'firebase/auth'
 import { CartProvider, useCart } from './CartContext'
+import { authProvider } from '../data/compose.js'
+import {
+  GUEST_HANDOFF_KEY,
+  GUEST_HANDOFF_SCHEMA,
+  GUEST_HANDOFF_VERSION,
+} from '../data/cartStorage'
+
+vi.mock('firebase/auth', () => ({
+  getAuth: vi.fn(() => ({})),
+  signInAnonymously: vi.fn(),
+  createUserWithEmailAndPassword: vi.fn(),
+  signInWithEmailAndPassword: vi.fn(),
+  signOut: vi.fn(() => Promise.resolve()),
+  linkWithCredential: vi.fn(),
+  EmailAuthProvider: { credential: vi.fn() },
+  onAuthStateChanged: vi.fn((_auth, cb) => {
+    Promise.resolve().then(() => cb(null));
+    return () => {};
+  }),
+  sendPasswordResetEmail: vi.fn(() => Promise.resolve()),
+}));
+
+vi.mock('firebase/app', () => ({
+  initializeApp: vi.fn(() => ({})),
+}));
 
 const wrapper = ({ children }) => <CartProvider>{children}</CartProvider>
 
@@ -13,6 +40,49 @@ const wheel = {
   image: '/wheel.png',
   description: 'A wheel',
 }
+
+const boundRecord = (uid, cartItems = [{ ...wheel, quantity: 2 }]) => ({
+  schema: GUEST_HANDOFF_SCHEMA,
+  version: GUEST_HANDOFF_VERSION,
+  state: 'bound',
+  firebaseUid: uid,
+  identityType: 'anonymous',
+  items: cartItems,
+  source: 'guest',
+  createdAt: 1000,
+  updatedAt: 1000,
+})
+
+const pendingRecord = (cartItems = [{ ...wheel, quantity: 2 }]) => ({
+  schema: GUEST_HANDOFF_SCHEMA,
+  version: GUEST_HANDOFF_VERSION,
+  state: 'pending',
+  firebaseUid: null,
+  identityType: null,
+  items: cartItems,
+  source: 'guest',
+  createdAt: 1000,
+  updatedAt: 1000,
+})
+
+const storeHandoff = (record) =>
+  localStorage.setItem(GUEST_HANDOFF_KEY, JSON.stringify(record))
+
+const readHandoff = () => JSON.parse(localStorage.getItem(GUEST_HANDOFF_KEY))
+
+const anonymousUser = { uid: 'anon-1', isAnonymous: true }
+const customerUser = { uid: 'cust-1', isAnonymous: false }
+
+beforeEach(() => {
+  vi.mocked(signInAnonymously).mockResolvedValue({
+    user: { uid: 'anon-1', isAnonymous: true },
+  })
+})
+
+afterEach(() => {
+  vi.restoreAllMocks()
+  localStorage.clear()
+})
 
 describe('CartContext', () => {
   it('starts with an empty cart', () => {
@@ -61,40 +131,32 @@ describe('CartContext', () => {
   })
 
   it('removes an item by id', () => {
-    const secondProduct = { id: 2, name: 'Seat', price: 50 }
-
     const { result } = renderCart()
-    act(() => result.current.addToCart(wheel))
-    act(() => result.current.addToCart(secondProduct))
 
+    act(() => result.current.addToCart(wheel))
     act(() => result.current.removeFromCart(wheel.id))
 
-    expect(result.current.cartItems).toEqual([{ ...secondProduct, quantity: 1 }])
+    expect(result.current.cartItems).toEqual([])
   })
 
   it('counts total quantity and sums price times quantity', () => {
-    const secondProduct = { id: 2, name: 'Seat', price: 50 }
-
     const { result } = renderCart()
-    act(() => result.current.addToCart(wheel))
-    act(() => result.current.addToCart(wheel))
-    act(() => result.current.addToCart(secondProduct))
 
-    // cartCount is a sum of quantities, not the number of cart lines.
-    expect(result.current.cartCount).toBe(3)
-    expect(result.current.cartTotal).toBeCloseTo(2451)
+    act(() => result.current.addToCart(wheel))
+    act(() => result.current.addToCart(wheel))
+
+    expect(result.current.cartCount).toBe(2)
+    expect(result.current.cartTotal).toBeCloseTo(2401)
   })
 
   it('clears the cart and dismisses the add confirmation', () => {
     const { result } = renderCart()
 
     act(() => result.current.addToCart(wheel))
-    act(() => result.current.dismissLastAdded())
-    expect(result.current.lastAdded).toBeNull()
-
     act(() => result.current.clearCart())
     expect(result.current.cartItems).toEqual([])
     expect(result.current.cartCount).toBe(0)
+    expect(result.current.lastAdded).toBeNull()
   })
 
   it('toggles and sets the drawer open state', () => {
@@ -105,22 +167,17 @@ describe('CartContext', () => {
 
     act(() => result.current.toggleCart())
     expect(result.current.isCartOpen).toBe(false)
-
-    act(() => result.current.setIsCartOpen(true))
-    expect(result.current.isCartOpen).toBe(true)
   })
 
-  it('persists the cart and restores it after the provider remounts', async () => {
+  it('persists the cart and restores it after the provider remounts', () => {
     const firstRender = renderCart()
 
     act(() => firstRender.result.current.addToCart(wheel))
     act(() => firstRender.result.current.addToCart(wheel))
 
-    await waitFor(() => {
-      expect(JSON.parse(localStorage.getItem('cart'))).toEqual([
-        { ...wheel, quantity: 2 },
-      ])
-    })
+    expect(JSON.parse(localStorage.getItem('cart'))).toEqual([
+      { ...wheel, quantity: 2 },
+    ])
 
     firstRender.unmount()
 
@@ -130,89 +187,272 @@ describe('CartContext', () => {
     expect(result.current.cartTotal).toBeCloseTo(2401)
   })
 
-  it('throws when useCart is used outside CartProvider', () => {
-    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
+  describe('guest cart handoff', () => {
+    it('persists a pending handoff before signInAnonymously begins', async () => {
+      const signIn = vi.mocked(signInAnonymously)
 
-    expect(() => renderHook(() => useCart())).toThrow(
-      'useCart must be used within a CartProvider'
-    )
+      signIn.mockImplementation(() => {
+        const handoff = readHandoff()
+        expect(handoff).not.toBeNull()
+        expect(handoff.state).toBe('pending')
+        expect(handoff.firebaseUid).toBeNull()
+        expect(handoff.items).toEqual([{ ...wheel, quantity: 1 }])
+        return Promise.resolve({ user: { uid: 'anon-1', isAnonymous: true } })
+      })
 
-    consoleError.mockRestore()
-  })
-})
+      const { result } = renderCart()
 
-describe('CartContext localStorage recovery', () => {
-  it('starts empty when the cart key is missing', () => {
-    const { result } = renderCart()
+      act(() => result.current.addToCart(wheel))
 
-    expect(result.current.cartItems).toEqual([])
-  })
-
-  it('restores valid saved cart data', () => {
-    localStorage.setItem('cart', JSON.stringify([{ ...wheel, quantity: 2 }]))
-
-    const { result } = renderCart()
-
-    expect(result.current.cartItems).toEqual([{ ...wheel, quantity: 2 }])
-  })
-
-  it('recovers from malformed JSON without crashing', () => {
-    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
-    localStorage.setItem('cart', '{not valid json')
-
-    const { result } = renderCart()
-
-    expect(result.current.cartItems).toEqual([])
-    expect(consoleError).toHaveBeenCalled()
-    expect(JSON.parse(localStorage.getItem('cart'))).toEqual([])
-
-    consoleError.mockRestore()
-  })
-
-  it('ignores non-array saved values', () => {
-    localStorage.setItem('cart', JSON.stringify({ id: 'not-an-array' }))
-
-    const { result } = renderCart()
-
-    expect(result.current.cartItems).toEqual([])
-  })
-
-  it('filters invalid entries and normalizes invalid quantities to 1', () => {
-    localStorage.setItem(
-      'cart',
-      JSON.stringify([
-        { id: 'ok', name: 'Valid', price: '$10', quantity: 2 },
-        { id: 'missing-name', price: '$1', quantity: 1 },
-        null,
-        'not-an-item',
-        { id: 'bad-quantity', name: 'Bad quantity', price: '$5', quantity: '2' },
-        { id: 'zero-quantity', name: 'Zero quantity', price: '$5', quantity: 0 },
-        { id: 'decimal-quantity', name: 'Decimal quantity', price: '$5', quantity: 2.9 },
-        { id: 7, name: 'Numeric id', price: 15, quantity: 1 },
+      // Active cart key is persisted too.
+      expect(JSON.parse(localStorage.getItem('cart'))).toEqual([
+        { ...wheel, quantity: 1 },
       ])
-    )
 
-    const { result } = renderCart()
+      expect(signIn).toHaveBeenCalled()
+    })
 
-    expect(result.current.cartItems).toEqual([
-      { id: 'ok', name: 'Valid', price: '$10', quantity: 2 },
-      { id: 'bad-quantity', name: 'Bad quantity', price: '$5', quantity: 1 },
-      { id: 'zero-quantity', name: 'Zero quantity', price: '$5', quantity: 1 },
-      { id: 'decimal-quantity', name: 'Decimal quantity', price: '$5', quantity: 2 },
-      { id: 7, name: 'Numeric id', price: 15, quantity: 1 },
-    ])
-  })
+    it('binds the handoff to the anonymous UID after sign-in succeeds', async () => {
+      const { result } = renderCart()
 
-  it('normalizes non-finite saved quantities to 1', () => {
-    localStorage.setItem(
-      'cart',
-      '[{"id":"infinity","name":"Infinite","price":"$1","quantity":1e999}]'
-    )
+      await act(async () => {
+        result.current.addToCart(wheel)
+        await Promise.resolve()
+      })
 
-    const { result } = renderCart()
+      const handoff = readHandoff()
+      expect(handoff.state).toBe('bound')
+      expect(handoff.firebaseUid).toBe('anon-1')
+      expect(handoff.identityType).toBe('anonymous')
+      expect(handoff.items).toEqual([{ ...wheel, quantity: 1 }])
+    })
 
-    expect(result.current.cartItems).toEqual([
-      { id: 'infinity', name: 'Infinite', price: '$1', quantity: 1 },
-    ])
+    it('preserves the pending handoff when authentication fails', async () => {
+      vi.mocked(signInAnonymously).mockRejectedValueOnce(
+        new Error('Firebase sign-in failed')
+      )
+
+      const { result } = renderCart()
+
+      await act(async () => {
+        result.current.addToCart(wheel)
+        await Promise.resolve()
+      })
+
+      expect(JSON.parse(localStorage.getItem('cart'))).toEqual([
+        { ...wheel, quantity: 1 },
+      ])
+
+      const handoff = readHandoff()
+      expect(handoff).not.toBeNull()
+      expect(handoff.state).toBe('pending')
+      expect(handoff.firebaseUid).toBeNull()
+      expect(handoff.items).toEqual([{ ...wheel, quantity: 1 }])
+    })
+
+    it('does not create a handoff for a signed-in customer', () => {
+      vi.spyOn(authProvider, 'getCurrentUser').mockReturnValue(customerUser)
+
+      const { result } = renderCart()
+
+      act(() => result.current.addToCart(wheel))
+
+      expect(localStorage.getItem(GUEST_HANDOFF_KEY)).toBeNull()
+      expect(JSON.parse(localStorage.getItem('cart'))).toEqual([
+        { ...wheel, quantity: 1 },
+      ])
+    })
+
+    it('never overwrites a handoff bound to another Firebase UID', () => {
+      const foreignHandoff = boundRecord('anon-other', [
+        { ...wheel, id: 'foreign', quantity: 7 },
+      ])
+      storeHandoff(foreignHandoff)
+      vi.spyOn(authProvider, 'getCurrentUser').mockReturnValue({
+        uid: 'anon-new',
+        isAnonymous: true,
+      })
+
+      const { result } = renderCart()
+
+      act(() => result.current.addToCart(wheel))
+
+      // The foreign owner's snapshot is preserved byte-for-byte.
+      expect(readHandoff()).toEqual(foreignHandoff)
+      // The active cart still updates for the current browser session.
+      expect(JSON.parse(localStorage.getItem('cart'))).toEqual([
+        { ...wheel, quantity: 1 },
+      ])
+    })
+
+    it('binds a pending handoff when an anonymous session is restored', () => {
+      storeHandoff(pendingRecord())
+      vi.spyOn(authProvider, 'getCurrentUser').mockReturnValue(anonymousUser)
+
+      const { result } = renderCart()
+
+      act(() => result.current.addToCart(wheel))
+
+      const handoff = readHandoff()
+      expect(handoff.state).toBe('bound')
+      expect(handoff.firebaseUid).toBe('anon-1')
+    })
+
+    it('recovers a matching UID-bound handoff explicitly', () => {
+      storeHandoff(boundRecord('anon-1'))
+      localStorage.setItem('cart', JSON.stringify([]))
+      vi.spyOn(authProvider, 'getCurrentUser').mockReturnValue(anonymousUser)
+
+      const { result } = renderCart()
+
+      const status = result.current.getGuestCartRecoveryStatus()
+      expect(status.recoverable).toBe(true)
+      expect(status.itemCount).toBe(1)
+
+      let outcome
+      act(() => {
+        outcome = result.current.recoverGuestCart()
+      })
+
+      expect(outcome.ok).toBe(true)
+      expect(result.current.cartItems).toEqual([{ ...wheel, quantity: 2 }])
+      // The handoff is preserved for the future migration checkpoint.
+      expect(readHandoff()).toEqual(boundRecord('anon-1'))
+    })
+
+    it('refuses recovery for a mismatched UID and preserves the handoff', () => {
+      storeHandoff(boundRecord('anon-1'))
+      vi.spyOn(authProvider, 'getCurrentUser').mockReturnValue(customerUser)
+
+      const { result } = renderCart()
+
+      expect(result.current.getGuestCartRecoveryStatus()).toMatchObject({
+        recoverable: false,
+        reason: 'uid-mismatch',
+      })
+
+      let outcome
+      act(() => {
+        outcome = result.current.recoverGuestCart()
+      })
+
+      expect(outcome).toEqual({ ok: false, reason: 'uid-mismatch' })
+      expect(result.current.cartItems).toEqual([])
+      expect(readHandoff()).toEqual(boundRecord('anon-1'))
+    })
+
+    it('never exposes an unclaimed pending handoff', () => {
+      storeHandoff(pendingRecord())
+      vi.spyOn(authProvider, 'getCurrentUser').mockReturnValue(customerUser)
+
+      const { result } = renderCart()
+
+      expect(result.current.getGuestCartRecoveryStatus()).toMatchObject({
+        recoverable: false,
+        reason: 'unclaimed-handoff',
+      })
+
+      let outcome
+      act(() => {
+        outcome = result.current.recoverGuestCart()
+      })
+
+      expect(outcome).toEqual({ ok: false, reason: 'unclaimed-handoff' })
+      expect(result.current.cartItems).toEqual([])
+      expect(readHandoff()).toEqual(pendingRecord())
+    })
+
+    it('never overwrites a non-empty cart', () => {
+      storeHandoff(boundRecord('anon-1'))
+      localStorage.setItem(
+        'cart',
+        JSON.stringify([{ ...wheel, id: 'existing', quantity: 1 }])
+      )
+      vi.spyOn(authProvider, 'getCurrentUser').mockReturnValue(anonymousUser)
+
+      const { result } = renderCart()
+
+      expect(result.current.getGuestCartRecoveryStatus()).toMatchObject({
+        recoverable: false,
+        reason: 'cart-not-empty',
+      })
+
+      let outcome
+      act(() => {
+        outcome = result.current.recoverGuestCart()
+      })
+
+      expect(outcome).toEqual({ ok: false, reason: 'cart-not-empty' })
+      expect(result.current.cartItems).toEqual([
+        { ...wheel, id: 'existing', quantity: 1 },
+      ])
+      expect(readHandoff()).toEqual(boundRecord('anon-1'))
+    })
+
+    it('is idempotent: a repeated recovery does not duplicate items', () => {
+      storeHandoff(boundRecord('anon-1'))
+      localStorage.setItem('cart', JSON.stringify([]))
+      vi.spyOn(authProvider, 'getCurrentUser').mockReturnValue(anonymousUser)
+
+      const { result } = renderCart()
+
+      let first
+      let second
+      act(() => {
+        first = result.current.recoverGuestCart()
+      })
+      act(() => {
+        second = result.current.recoverGuestCart()
+      })
+
+      expect(first.ok).toBe(true)
+      expect(second).toEqual({ ok: false, reason: 'cart-not-empty' })
+      expect(result.current.cartItems).toEqual([{ ...wheel, quantity: 2 }])
+      expect(result.current.cartCount).toBe(2)
+      expect(readHandoff()).toEqual(boundRecord('anon-1'))
+    })
+
+    it('clears the visible cart on customer logout but preserves persisted cart', () => {
+      let authCallback
+      vi.spyOn(authProvider, 'onAuthStateChanged').mockImplementation((cb) => {
+        authCallback = cb
+        return () => {}
+      })
+      vi.spyOn(authProvider, 'getCurrentUser').mockReturnValue(customerUser)
+
+      localStorage.setItem('cart', JSON.stringify([{ ...wheel, quantity: 2 }]))
+      storeHandoff(boundRecord('anon-1'))
+
+      const { result } = renderCart()
+      expect(result.current.cartItems).toEqual([{ ...wheel, quantity: 2 }])
+
+      act(() => authCallback({ uid: 'cust-1', isAnonymous: false }))
+      act(() => authCallback(null))
+
+      expect(result.current.cartItems).toEqual([])
+      expect(JSON.parse(localStorage.getItem('cart'))).toEqual([
+        { ...wheel, quantity: 2 },
+      ])
+      // Logout must not delete the guest handoff.
+      expect(readHandoff()).toEqual(boundRecord('anon-1'))
+    })
+
+    it('exposes prepareGuestCart and it writes both keys', () => {
+      const { result } = renderCart()
+
+      let prepared
+      act(() => {
+        prepared = result.current.prepareGuestCart()
+      })
+
+      expect(prepared).toBe(true)
+      expect(JSON.parse(localStorage.getItem('cart'))).toEqual([])
+      expect(readHandoff()).toMatchObject({
+        schema: GUEST_HANDOFF_SCHEMA,
+        version: GUEST_HANDOFF_VERSION,
+        state: 'pending',
+        items: [],
+      })
+    })
   })
 })

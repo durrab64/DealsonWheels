@@ -1,20 +1,14 @@
 /**
  * Authentication persistence adapter for the existing mock auth.
  *
- * Owns the `user` localStorage key and the JSON encoding/validation. It does
- * not authenticate anyone: credentials, sessions and tokens are unchanged
- * mock behavior and remain in `AuthContext`.
+ * Owns the `user` localStorage key through a provider selected in
+ * `compose.js`. It does not authenticate anyone: credentials, sessions
+ * and tokens are unchanged mock behavior and remain in `AuthContext`.
  */
 
-export const AUTH_STORAGE_KEY = 'user';
+import { authProvider } from './compose.js';
 
-// Only accept a persisted user that has the fields the UI relies on.
-const isValidUser = (value) =>
-    Boolean(value) &&
-    typeof value === 'object' &&
-    (typeof value.id === 'string' || typeof value.id === 'number') &&
-    typeof value.name === 'string' &&
-    typeof value.email === 'string';
+export const AUTH_STORAGE_KEY = authProvider.AUTH_STORAGE_KEY;
 
 /**
  * Read the persisted user.
@@ -26,10 +20,7 @@ const isValidUser = (value) =>
  */
 export const loadUser = () => {
     try {
-        const savedUser = localStorage.getItem(AUTH_STORAGE_KEY);
-        if (!savedUser) return null;
-        const parsedUser = JSON.parse(savedUser);
-        return isValidUser(parsedUser) ? parsedUser : null;
+        return authProvider.loadUser();
     } catch {
         return null;
     }
@@ -41,10 +32,10 @@ export const loadUser = () => {
  * @param {object | null} user
  */
 export const saveUser = (user) => {
-    if (isValidUser(user)) {
-        localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(user));
-    } else {
-        localStorage.removeItem(AUTH_STORAGE_KEY);
+    try {
+        authProvider.saveUser(user);
+    } catch {
+        // Ignore storage errors
     }
 };
 
@@ -52,5 +43,9 @@ export const saveUser = (user) => {
  * Remove the persisted user.
  */
 export const clearUser = () => {
-    localStorage.removeItem(AUTH_STORAGE_KEY);
+    try {
+        authProvider.clearUser();
+    } catch {
+        // Ignore storage errors
+    }
 };

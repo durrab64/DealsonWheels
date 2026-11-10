@@ -1,12 +1,15 @@
-import { tradeInventory } from './cars.jsx';
-
 /**
  * Read-only access to the static used-car inventory.
  *
- * `cars.jsx` remains the source of truth. This module only exposes the lookup
- * shapes the marketplace pages already use; it does not add, filter, sort or
- * modify listings.
+ * `cars.jsx` remains the source of truth. This repository delegates to a
+ * vehicle provider (selected in `compose.js`) so that a future backing
+ * implementation can be substituted without rewriting page components.
+ *
+ * This module only exposes the lookup shapes the marketplace pages already
+ * use; it does not add, filter, sort or modify listings.
  */
+
+import { vehicleProvider } from './compose.js';
 
 /**
  * Return the existing vehicle listing array.
@@ -17,7 +20,7 @@ import { tradeInventory } from './cars.jsx';
  *
  * @returns {Array<object>}
  */
-export const getVehicleListings = () => tradeInventory;
+export const getVehicleListings = () => vehicleProvider.getVehicleListings();
 
 /**
  * Find a listing by route id.
@@ -28,5 +31,4 @@ export const getVehicleListings = () => tradeInventory;
  * @param {string} id
  * @returns {object | undefined}
  */
-export const getVehicleById = (id) =>
-    tradeInventory.find(item => String(item.id) === id);
+export const getVehicleById = (id) => vehicleProvider.getVehicleById(id);
